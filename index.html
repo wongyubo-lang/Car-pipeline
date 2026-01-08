@@ -1,367 +1,161 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { 
-  Building2, Car, MapPin, Calendar, User, FileText, 
-  Plus, Save, X, History, ClipboardCheck, Cloud, 
-  Trash2, AlertCircle, Phone, ChevronRight 
-} from 'lucide-react';
-import { initializeApp } from 'firebase/app';
-import { getAuth, onAuthStateChanged, signInAnonymously, signInWithCustomToken } from 'firebase/auth';
-import { getFirestore, collection, doc, setDoc, onSnapshot, query } from 'firebase/firestore';
-
-// --- 1. Firebase 초기화 (환경 변수 우선 사용) ---
-const firebaseConfig = typeof __firebase_config !== 'undefined' 
-  ? JSON.parse(__firebase_config) 
-  : {
-      apiKey: "AIzaSyAILLjkTNBhLotZydS7_9rsdpSbhH5eAYM",
-      authDomain: "car-pipeline.firebaseapp.com",
-      projectId: "car-pipeline",
-      storageBucket: "car-pipeline.firebasestorage.app",
-      messagingSenderId: "440814227828",
-      appId: "1:440814227828:web:07fb082a081a163c7f9c21"
-    };
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const appId = typeof __app_id !== 'undefined' ? __app_id : 'car-pipeline-master-v1';
-
-const App = () => {
-  // --- 상태 관리 ---
-  const [selectedBrand, setSelectedBrand] = useState('BMW');
-  const [selectedBranch, setSelectedBranch] = useState(null); 
-  const [meetings, setMeetings] = useState({}); 
-  const [showModal, setShowModal] = useState(false);
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [saveError, setSaveError] = useState('');
-  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
-  
-  // 폼 상태
-  const [contactPerson, setContactPerson] = useState('');
-  const [contactPhone, setContactPhone] = useState('');
-  const [content, setContent] = useState('');
-  const [meetingDate, setMeetingDate] = useState(new Date().toISOString().split('T')[0]);
-
-  // --- [중요] (1) 인증 처리 (Rule 3 준수) ---
-  useEffect(() => {
-    const initAuth = async () => {
-      try {
-        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-          await signInWithCustomToken(auth, __initial_auth_token);
-        } else {
-          await signInAnonymously(auth);
-        }
-      } catch (err) {
-        console.error("인증 실패:", err);
-      }
-    };
-    initAuth();
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setLoading(false);
-    });
-    return () => unsubscribe();
-  }, []);
-
-  // --- [중요] (2) 실시간 데이터 수신 (Rule 1, 2 준수) ---
-  useEffect(() => {
-    if (!user) return;
-
-    // 공식 경로: /artifacts/{appId}/public/data/meetingLogs
-    const q = collection(db, 'artifacts', appId, 'public', 'data', 'meetingLogs');
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = {};
-      snapshot.forEach((docSnap) => {
-        data[docSnap.id] = docSnap.data().logs || [];
-      });
-      setMeetings(data);
-    }, (error) => {
-      console.error("Firestore 오류:", error);
-      if (error.code === 'permission-denied') {
-        setSaveError('권한이 없어요. 시스템 설정이 필요합니다.');
-      }
-    });
-
-    return () => unsubscribe();
-  }, [user]);
-
-  // --- 브랜드 데이터 ---
-  const brandData = useMemo(() => ({
-    'Mercedes-Benz': { color: 'bg-slate-900', dealers: [{ name: '한성자동차', branches: ['청담', '강남', '서초', '용산', '마곡', '성남', '수원', '대전', '부산', '강릉', '춘천'] }, { name: 'HS효성더클래스', branches: ['강남대로', '송파', '분당 정자', '안양 평촌', '천안', '청주', '구리', '용인'] }, { name: '모터원', branches: ['일산', '의정부', '파주', '고양', '양주'] }, { name: 'KCC오토', branches: ['강서 목동', '한남', '금천', '부천', '김포', '제주'] }, { name: '교학모터스', branches: ['동대문 전시장'] }, { name: '중앙모터스', branches: ['대구', '포항', '경산'] }, { name: '스타자동차', branches: ['부산 해운대', '금정', '울산'] }, { name: '경남자동차', branches: ['진주', '창원'] }, { name: '진모터스', branches: ['전주', '군산', '순천'] }] },
-    'BMW': { color: 'bg-blue-600', dealers: [{ name: '코오롱모터스', branches: ['강남', '삼성', '역삼', '분당', '부천', '대전', '광주', '대구', '부산', '춘천'] }, { name: '한독모터스', branches: ['서초', '방배', '용산', '수원', '분당', '상무', '수성'] }, { name: '도이치모터스', branches: ['성수', '잠실', '대치', '하남 스타필드', '수원 오토월드', '원주', '제주'] }, { name: '바바리안모터스', branches: ['송도', '인천', '일산', '계양', '김포', '고양'] }, { name: '동성모터스', branches: ['부산 해운대', '창원', '울산', '진주', '포항'] }, { name: '내쇼날모터스', branches: ['전주', '군산', '목포', '서산'] }, { name: '삼천리모터스', branches: ['청주', '천안', '세종', '안산', '안양'] }] },
-    'Audi': { color: 'bg-red-700', dealers: [{ name: '고진모터스', branches: ['도산대로', '수원', '광주', '전주', '대전', '천안', '목포'] }, { name: '태안모터스', branches: ['남산', '도곡', '송도', '개포', '방이', '일산', '인천'] }, { name: '위본모터스', branches: ['분당', '서초', '안양', '동탄'] }, { name: '유카로오토모빌', branches: ['부산 해운대', '창원', '울산', '진주', '제주'] }] },
-    'Volvo': { color: 'bg-[#003057]', dealers: [{ name: '코오롱오토모티브', branches: ['서초', '송파', '판교', '의정부', '천안', '울산', '원주', '강릉'] }, { name: '에이치모터스', branches: ['강남', '대치', '신정', '인천', '수원', '대전'] }, { name: '아주오토리움', branches: ['목동', '일산', '안양', '부천', '고양'] }, { name: '아이언모터스', branches: ['부산 해운대', '광안', '창원'] }, { name: '아이비모터스', branches: ['광주', '전주', '제주', '군산'] }, { name: '천하자동차', branches: ['용산', '분당'] }, { name: '태영모터스', branches: ['대구', '포항'] }] },
-    'Volkswagen': { color: 'bg-[#001E50]', dealers: [{ name: '클라쎄오토', branches: ['강남', '방배', '수원', '용인', '천안', '구리'] }, { name: '마이스터모터스', branches: ['한남', '서초', '마포', '인천', '부천'] }, { name: '아우토플라츠', branches: ['문정', '판교', '안양', '분당', '하남'] }, { name: '유카로오토모빌', branches: ['부산', '창원', '울산', '제주'] }, { name: '지엔비오토모빌', branches: ['대구', '포항'] }] },
-    'Porsche': { color: 'bg-red-600', dealers: [{ name: 'SSCL', branches: ['대치', '서초', '청담', '분당 판교', '부산', '인천'] }, { name: '아우토슈타트', branches: ['일산', '대구', '대전'] }, { name: '도이치아우토', branches: ['수원', '광주', '창원'] }, { name: '세영모빌리티', branches: ['잠실', '송파', '성수'] }] },
-    'Lexus': { color: 'bg-slate-700', dealers: [{ name: '천우모터스', branches: ['강남', '서초', '일산', '안양'] }, { name: '엘앤티렉서스', branches: ['도산대로', '강동', '광진', '수원', '안산'] }, { name: '동일모터스', branches: ['부산', '창원', '울산', '진주', '제주'] }, { name: '중부모터스', branches: ['대구', '대전'] }] },
-    'Toyota': { color: 'bg-red-800', dealers: [{ name: '효성토요타', branches: ['강남', '강서', '평촌'] }, { name: '천우모터스', branches: ['용산', '일산'] }, { name: '엘앤티토요타', branches: ['강동', '구리', '안양'] }, { name: 'LS네트웍스', branches: ['인천', '대전'] }, { name: 'D&T모터스', branches: ['서초', '수원'] }, { name: '동일모터스', branches: ['부산', '창원'] }] },
-    'Land Rover': { color: 'bg-[#005A2B]', dealers: [{ name: 'KCC오토모빌', branches: ['서초', '분당', '일산', '제주'] }, { name: '천우오토모빌', branches: ['강남', '송파'] }, { name: '아주네트웍스', branches: ['한남', '인천', '부천'] }, { name: '효성프리미어', branches: ['강서', '부산', '울산'] }] },
-    'Jeep': { color: 'bg-[#1D3C34]', dealers: [{ name: '렉스모터스', branches: ['청담', '서초'] }, { name: '비전모터스', branches: ['분당', '수원', '창원'] }, { name: '프리미어오토', branches: ['강서', '인천', '제주'] }] },
-    'Ford/Lincoln': { color: 'bg-[#003478]', dealers: [{ name: '선인자동차', branches: ['강남', '동대문', '인천', '수원', '대전', '대구', '부산'] }, { name: '프리미어모터스', branches: ['방배', '영등포', '평촌', '부천', '울산', '포항'] }, { name: '더파크모터스', branches: ['마포', '의정부', '구리', '원주', '세종'] }] },
-    'Honda': { color: 'bg-red-600', dealers: [{ name: '안호모터스', branches: ['강남', '인천'] }, { name: '비전모터스', branches: ['서초', '수원'] }, { name: 'KCC모터스', branches: ['일산', '대구'] }] },
-    'Bentley': { color: 'bg-[#004225]', dealers: [{ name: '벤틀리 서울 (참존)', branches: ['청담 타워', '동대문 센터', '부산 전시장', '대구 전시장'] }] },
-    'Rolls-Royce': { color: 'bg-[#632945]', dealers: [{ name: '코오롱모터스', branches: ['청담 부티크', '판교 라운지', '부산 해운대'] }] },
-    'Lamborghini': { color: 'bg-[#DAA520]', dealers: [{ name: 'SQDA 모터스', branches: ['삼성 전시장', '부산 센터'] }] },
-    'Maserati': { color: 'bg-[#002B5C]', dealers: [{ name: 'FMK', branches: ['강남', '한남', '분당', '대전', '대구', '광주', '부산'] }] }
-  }), []);
-
-  // --- 이벤트 핸들러 ---
-  const openMeetingModal = (dealerName, branchName) => {
-    setSelectedBranch({ dealer: dealerName, branch: branchName });
-    setContactPerson('');
-    setContactPhone('');
-    setContent('');
-    setSaveError('');
-    setDeleteConfirmId(null);
-    setMeetingDate(new Date().toISOString().split('T')[0]);
-    setShowModal(true);
-  };
-
-  const saveMeeting = useCallback(async () => {
-    if (!contactPerson || !content || !user || isSaving) return;
-    setIsSaving(true);
-    setSaveError('');
-
-    const safeBrandName = selectedBrand.replace(/\//g, '_');
-    const branchKey = `${safeBrandName}-${selectedBranch.dealer}-${selectedBranch.branch}`;
-    
-    const newMeeting = {
-      id: Date.now(),
-      date: meetingDate,
-      person: contactPerson,
-      phone: contactPhone,
-      content: content,
-      createdBy: user.uid
-    };
-
-    const currentLogs = meetings[branchKey] || [];
-    const updatedLogs = [...currentLogs, newMeeting];
-
-    try {
-      const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'meetingLogs', branchKey);
-      await setDoc(docRef, { logs: updatedLogs });
-      setShowModal(false);
-    } catch (err) {
-      console.error("저장 실패:", err);
-      setSaveError('앗! 저장이 지연되고 있어요. 다시 시도해 보세요!');
-    } finally {
-      setIsSaving(false);
-    }
-  }, [contactPerson, contactPhone, content, user, isSaving, selectedBrand, selectedBranch, meetingDate, meetings]);
-
-  const confirmDelete = async (logId) => {
-    if (!user || isSaving) return;
-    const safeBrandName = selectedBrand.replace(/\//g, '_');
-    const branchKey = `${safeBrandName}-${selectedBranch.dealer}-${selectedBranch.branch}`;
-    const updatedLogs = (meetings[branchKey] || []).filter(m => m.id !== logId);
-
-    setIsSaving(true);
-    try {
-      const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'meetingLogs', branchKey);
-      await setDoc(docRef, { logs: updatedLogs });
-      setDeleteConfirmId(null);
-    } catch (err) {
-      console.error("삭제 실패:", err);
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  if (loading) return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50">
-      <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
-      <p className="text-blue-600 font-black animate-pulse">엔진 시동 중... 멍멍!</p>
-    </div>
-  );
-
-  return (
-    <div className="min-h-screen bg-[#f8fafc] text-slate-900 font-sans">
-      {/* 1. 고정 헤더 */}
-      <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200 px-4 py-4 md:py-6">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="text-center md:text-left">
-            <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-800">Car Distribution Pipeline</h1>
-            <div className="flex items-center gap-2 mt-1 justify-center md:justify-start">
-              <Cloud className={`w-4 h-4 ${user ? 'text-emerald-500' : 'text-slate-300'}`} />
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{user ? 'Live Syncing' : 'Connecting...'}</span>
-            </div>
-          </div>
-          <div className="flex gap-4 bg-slate-100 px-5 py-2.5 rounded-3xl border border-slate-200">
-            <div className="text-center"><p className="text-[9px] font-black text-slate-400">LOGS</p><p className="text-xl font-black text-blue-600">{Object.values(meetings).flat().length}</p></div>
-            <div className="w-px h-8 bg-slate-300"></div>
-            <div className="text-center"><p className="text-[9px] font-black text-slate-400">ACTIVE</p><p className="text-xl font-black text-slate-800">{Object.keys(meetings).length}</p></div>
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-6xl mx-auto px-4 py-8">
-        {/* 2. 브랜드 네비게이션 */}
-        <nav className="mb-10 overflow-x-auto pb-4 custom-scrollbar">
-          <div className="flex gap-2 min-w-max">
-            {Object.keys(brandData).map((brand) => (
-              <button 
-                key={brand} 
-                onClick={() => setSelectedBrand(brand)} 
-                className={`px-6 py-2.5 rounded-2xl font-black text-xs transition-all border-2 ${
-                  selectedBrand === brand ? `${brandData[brand].color} text-white border-transparent shadow-xl scale-105` : 'bg-white text-slate-500 border-slate-100'
-                }`}
-              >
-                {brand}
-              </button>
-            ))}
-          </div>
-        </nav>
-
-        {/* 3. 메인 배너 */}
-        <div className={`w-full p-10 md:p-14 rounded-[3.5rem] shadow-2xl text-white text-center mb-12 transition-all duration-700 ${brandData[selectedBrand].color}`}>
-          <h2 className="text-4xl md:text-7xl font-black tracking-tighter uppercase leading-none">{selectedBrand}</h2>
-          <p className="mt-4 opacity-50 text-[11px] font-bold tracking-[0.4em] uppercase">Target Distribution Strategy</p>
-          <div className="h-1.5 w-24 bg-white/20 rounded-full mx-auto mt-6"></div>
-        </div>
-
-        {/* 4. 딜러사 그리드 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {brandData[selectedBrand].dealers.map((dealer, idx) => (
-            <div key={idx} className="bg-white p-8 rounded-[3.5rem] border border-slate-100 shadow-sm flex flex-col group transition-all hover:shadow-2xl hover:-translate-y-1">
-              <div className="flex items-center gap-3 mb-8">
-                <div className="p-3 bg-slate-50 rounded-2xl group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                  <Building2 className="w-6 h-6" />
-                </div>
-                <span className="text-[10px] font-black text-slate-300 tracking-[0.2em] uppercase">Dealer Partner</span>
-              </div>
-              <h3 className="text-2xl font-black text-slate-800 mb-10 tracking-tight">{dealer.name}</h3>
-              <div className="grid grid-cols-2 gap-3 flex-1">
-                {dealer.branches.map((branch, bIdx) => {
-                  const count = (meetings[`${selectedBrand.replace(/\//g, '_')}-${dealer.name}-${branch}`] || []).length;
-                  return (
-                    <button 
-                      key={bIdx} 
-                      onClick={() => openMeetingModal(dealer.name, branch)} 
-                      className={`p-4 rounded-3xl text-[12px] font-black border-2 transition-all text-left relative overflow-hidden ${
-                        count > 0 ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-slate-50 border-transparent text-slate-500 hover:border-blue-200 hover:bg-white shadow-sm'
-                      }`}
-                    >
-                      <span className="block truncate">{branch}</span>
-                      {count > 0 && <span className="text-[10px] opacity-60 mt-1 block font-bold">{count}회 방문</span>}
-                      {count > 0 && <span className="absolute top-2 right-2 w-2 h-2 bg-blue-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.5)]"></span>}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-        </div>
-      </main>
-
-      {/* 5. 기록 모달 */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/90 backdrop-blur-md animate-in fade-in duration-300">
-          <div className="bg-white w-full max-w-xl rounded-[3.5rem] shadow-2xl overflow-hidden max-h-[90vh] flex flex-col animate-in zoom-in-95">
-            <div className={`p-8 md:p-12 text-white flex justify-between items-start ${brandData[selectedBrand].color}`}>
-              <div>
-                <p className="text-[10px] font-black opacity-70 mb-2 uppercase tracking-widest">{selectedBrand} • {selectedBranch.dealer}</p>
-                <h2 className="text-3xl font-black tracking-tight">{selectedBranch.branch} 기록 관리</h2>
-              </div>
-              <button onClick={() => setShowModal(false)} className="bg-white/20 p-3 rounded-full hover:bg-white/40 transition-all"><X className="w-6 h-6" /></button>
-            </div>
-
-            <div className="p-8 md:p-12 space-y-10 overflow-y-auto custom-scrollbar flex-1">
-              {/* 히스토리 리스트 */}
-              {meetings[`${selectedBrand.replace(/\//g, '_')}-${selectedBranch.dealer}-${selectedBranch.branch}`]?.length > 0 && (
-                <div className="space-y-6">
-                  <div className="flex items-center gap-2">
-                    <History className="w-4 h-4 text-blue-600" />
-                    <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Meeting Archive</p>
-                  </div>
-                  <div className="space-y-4">
-                    {meetings[`${selectedBrand.replace(/\//g, '_')}-${selectedBranch.dealer}-${selectedBranch.branch}`].map(m => (
-                      <div key={m.id} className="p-6 bg-slate-50 rounded-[2.5rem] relative group border border-slate-100 hover:border-blue-200 transition-all">
-                        {deleteConfirmId === m.id ? (
-                          <div className="flex items-center justify-between py-2">
-                            <p className="text-sm font-black text-red-600">지울까요?</p>
-                            <div className="flex gap-2">
-                              <button onClick={() => setDeleteConfirmId(null)} className="px-4 py-2 bg-white border rounded-xl text-xs font-bold text-slate-500">취소</button>
-                              <button onClick={() => confirmDelete(m.id)} className="px-4 py-2 bg-red-600 text-white rounded-xl text-xs font-bold shadow-lg shadow-red-200">삭제</button>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="flex justify-between items-start gap-4">
-                            <div className="flex-1">
-                              <div className="flex flex-col gap-2 mb-4">
-                                <span className="text-[10px] font-black text-blue-600 bg-blue-100/50 w-fit px-2 py-0.5 rounded-lg">{m.date}</span>
-                                <div className="flex flex-col">
-                                  <span className="text-sm font-black text-slate-800 flex items-center gap-2"><User className="w-4 h-4 opacity-30" /> {m.person}</span>
-                                  {m.phone && <span className="text-xs font-bold text-slate-400 flex items-center gap-2 mt-1"><Phone className="w-3.5 h-3.5 opacity-30" /> {m.phone}</span>}
-                                </div>
-                              </div>
-                              <p className="text-[13px] text-slate-600 leading-relaxed bg-white p-5 rounded-3xl border border-slate-100 shadow-sm">{m.content}</p>
-                            </div>
-                            <button onClick={() => setDeleteConfirmId(m.id)} className="p-2 text-slate-300 hover:text-red-500 transition-all opacity-0 group-hover:opacity-100"><Trash2 className="w-5 h-5" /></button>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* 입력 폼 */}
-              <div className="space-y-6 border-t border-slate-100 pt-10">
-                <div className="flex items-center gap-2">
-                  <ClipboardCheck className="w-4 h-4 text-blue-600" />
-                  <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">New Entry</p>
-                </div>
-                {saveError && <div className="p-4 bg-red-50 text-red-600 text-[11px] font-black rounded-2xl border border-red-200 flex items-center gap-2 animate-bounce"><AlertCircle className="w-4 h-4" /> {saveError}</div>}
-                <div className="grid grid-cols-1 gap-5">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 ml-2 uppercase">Date</label>
-                    <input type="date" value={meetingDate} onChange={(e) => setMeetingDate(e.target.value)} className="w-full p-5 bg-slate-50 rounded-[1.5rem] text-sm font-bold border-2 border-transparent focus:border-blue-500 focus:bg-white outline-none transition-all shadow-inner" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black text-slate-400 ml-2 uppercase">Person</label>
-                      <input type="text" placeholder="성함" value={contactPerson} onChange={(e) => setContactPerson(e.target.value)} className="w-full p-5 bg-slate-50 rounded-[1.5rem] text-sm font-bold border-2 border-transparent focus:border-blue-500 focus:bg-white outline-none transition-all shadow-inner" />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black text-slate-400 ml-2 uppercase">Contact</label>
-                      <input type="tel" placeholder="번호" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} className="w-full p-5 bg-slate-50 rounded-[1.5rem] text-sm font-bold border-2 border-transparent focus:border-blue-500 focus:bg-white outline-none transition-all shadow-inner" />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 ml-2 uppercase">Summary</label>
-                    <textarea placeholder="대화 내용을 요약해 주세요..." rows="4" value={content} onChange={(e) => setContent(e.target.value)} className="w-full p-5 bg-slate-50 rounded-[1.5rem] text-sm font-bold border-2 border-transparent focus:border-blue-500 focus:bg-white outline-none transition-all shadow-inner resize-none"></textarea>
-                  </div>
-                </div>
-                <button 
-                  onClick={saveMeeting} 
-                  disabled={!contactPerson || !content || isSaving} 
-                  className={`w-full py-6 text-white rounded-[2rem] font-black transition-all shadow-2xl active:scale-95 flex items-center justify-center gap-3 ${
-                    isSaving || !contactPerson || !content 
-                      ? 'bg-slate-300 cursor-not-allowed grayscale' 
-                      : 'bg-blue-600 hover:bg-blue-700 shadow-blue-500/30'
-                  }`}
-                >
-                  {isSaving ? (
-                    <><div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin"></div> 저장 중...</>
-                  ) : (
-                    <><Save className="w-6 h-6" /> 클라우드에 안전하게 보관</>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <style dangerouslySetInnerHTML={{ __html: `
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Car Distribution Pipeline - Preview</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;700;900&display=swap');
+        body { font-family: 'Pretendard', sans-serif; }
         .custom-scrollbar::-webkit-scrollbar { width: 5px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
-      `}} />
-    </div>
-  );
-};
+    </style>
+</head>
+<body class="bg-[#f8fafc]">
+    <div id="root"></div>
 
-export default App;
+    <script type="text/babel">
+        const { useState, useEffect, useCallback, useMemo } = React;
+
+        // 아이콘 컴포넌트 래퍼 (Lucide 대응)
+        const Icon = ({ name, className }) => {
+            const [iconSvg, setIconSvg] = React.useState('');
+            React.useEffect(() => {
+                const svg = lucide.createIcons();
+            }, [name]);
+            return <i data-lucide={name} className={className}></i>;
+        };
+
+        const App = () => {
+            const [selectedBrand, setSelectedBrand] = useState('BMW');
+            const [selectedBranch, setSelectedBranch] = useState(null);
+            const [meetings, setMeetings] = useState({});
+            const [showModal, setShowModal] = useState(false);
+            const [loading, setLoading] = useState(false); // 프리뷰를 위해 로딩 false 고정
+            
+            // 프리뷰용 데이터 (Firebase 연결 전 시각화용)
+            const brandData = useMemo(() => ({
+                'Mercedes-Benz': { color: 'bg-slate-900', dealers: [{ name: '한성자동차', branches: ['청담', '강남', '서초', '용산'] }, { name: 'HS효성더클래스', branches: ['강남대로', '송파', '분당'] }] },
+                'BMW': { color: 'bg-blue-600', dealers: [{ name: '코오롱모터스', branches: ['강남', '삼성', '역삼'] }, { name: '한독모터스', branches: ['서초', '방배', '용산'] }] },
+                'Audi': { color: 'bg-red-700', dealers: [{ name: '고진모터스', branches: ['도산대로', '수원'] }, { name: '태안모터스', branches: ['남산', '도곡'] }] },
+                'Volvo': { color: 'bg-[#003057]', dealers: [{ name: '코오롱오토모티브', branches: ['서초', '송파'] }] },
+                'Volkswagen': { color: 'bg-[#001E50]', dealers: [{ name: '클라쎄오토', branches: ['강남', '방배'] }] },
+                'Porsche': { color: 'bg-red-600', dealers: [{ name: 'SSCL', branches: ['대치', '서초'] }] },
+                'Lexus': { color: 'bg-slate-700', dealers: [{ name: '천우모터스', branches: ['강남', '서초'] }] },
+                'Toyota': { color: 'bg-red-800', dealers: [{ name: '효성토요타', branches: ['강남', '강서'] }] },
+                'Land Rover': { color: 'bg-[#005A2B]', dealers: [{ name: 'KCC오토모빌', branches: ['서초', '분당'] }] },
+                'Jeep': { color: 'bg-[#1D3C34]', dealers: [{ name: '렉스모터스', branches: ['청담', '서초'] }] }
+            }), []);
+
+            useEffect(() => {
+                lucide.createIcons();
+            }, [selectedBrand, showModal]);
+
+            const openMeetingModal = (dealerName, branchName) => {
+                setSelectedBranch({ dealer: dealerName, branch: branchName });
+                setShowModal(true);
+            };
+
+            return (
+                <div className="min-h-screen">
+                    {/* Header */}
+                    <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200 px-4 py-6">
+                        <div className="max-w-6xl mx-auto flex justify-between items-center">
+                            <div>
+                                <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-800">Car Distribution Pipeline</h1>
+                                <div className="flex items-center gap-2 mt-1">
+                                    <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">System Online (PC Optimized)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </header>
+
+                    <main className="max-w-6xl mx-auto px-4 py-8">
+                        {/* Brand Nav */}
+                        <nav className="mb-10 overflow-x-auto pb-4 custom-scrollbar">
+                            <div className="flex gap-2">
+                                {Object.keys(brandData).map((brand) => (
+                                    <button 
+                                        key={brand} 
+                                        onClick={() => setSelectedBrand(brand)} 
+                                        className={`px-6 py-2.5 rounded-2xl font-black text-xs transition-all border-2 whitespace-nowrap ${
+                                            selectedBrand === brand ? `${brandData[brand].color} text-white border-transparent shadow-xl scale-105` : 'bg-white text-slate-500 border-slate-100 hover:border-blue-200'
+                                        }`}
+                                    >
+                                        {brand}
+                                    </button>
+                                ))}
+                            </div>
+                        </nav>
+
+                        {/* Main Banner */}
+                        <div className={`w-full p-14 rounded-[3.5rem] shadow-2xl text-white text-center mb-12 transition-all duration-700 ${brandData[selectedBrand].color}`}>
+                            <h2 className="text-5xl md:text-7xl font-black tracking-tighter uppercase leading-none">{selectedBrand}</h2>
+                            <p className="mt-4 opacity-50 text-[11px] font-bold tracking-[0.4em] uppercase">Target Distribution Strategy</p>
+                        </div>
+
+                        {/* Dealer Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            {brandData[selectedBrand].dealers.map((dealer, idx) => (
+                                <div key={idx} className="bg-white p-8 rounded-[3.5rem] border border-slate-100 shadow-sm flex flex-col group transition-all hover:shadow-2xl">
+                                    <div className="flex items-center gap-3 mb-8">
+                                        <div className="p-3 bg-slate-50 rounded-2xl group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                                            <Icon name="building-2" className="w-6 h-6" />
+                                        </div>
+                                        <span className="text-[10px] font-black text-slate-300 tracking-[0.2em] uppercase">Dealer Partner</span>
+                                    </div>
+                                    <h3 className="text-2xl font-black text-slate-800 mb-10 tracking-tight">{dealer.name}</h3>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        {dealer.branches.map((branch, bIdx) => (
+                                            <button 
+                                                key={bIdx} 
+                                                onClick={() => openMeetingModal(dealer.name, branch)}
+                                                className="p-4 rounded-3xl text-[12px] font-black border-2 bg-slate-50 border-transparent text-slate-500 hover:border-blue-200 hover:bg-white shadow-sm transition-all text-left"
+                                            >
+                                                {branch}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </main>
+
+                    {/* Modal */}
+                    {showModal && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/90 backdrop-blur-md">
+                            <div className="bg-white w-full max-w-xl rounded-[3.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95">
+                                <div className={`p-10 text-white flex justify-between items-start ${brandData[selectedBrand].color}`}>
+                                    <div>
+                                        <p className="text-[10px] font-black opacity-70 mb-2 uppercase tracking-widest">{selectedBrand} • {selectedBranch.dealer}</p>
+                                        <h2 className="text-3xl font-black tracking-tight">{selectedBranch.branch} 기록 관리</h2>
+                                    </div>
+                                    <button onClick={() => setShowModal(false)} className="bg-white/20 p-3 rounded-full hover:bg-white/40"><Icon name="x" className="w-6 h-6" /></button>
+                                </div>
+                                <div className="p-10 space-y-6">
+                                    <div className="space-y-4">
+                                        <input type="text" placeholder="성함" className="w-full p-5 bg-slate-50 rounded-[1.5rem] text-sm font-bold border-2 border-transparent focus:border-blue-500 outline-none" />
+                                        <textarea placeholder="미팅 요약..." rows="4" className="w-full p-5 bg-slate-50 rounded-[1.5rem] text-sm font-bold border-2 border-transparent focus:border-blue-500 outline-none resize-none"></textarea>
+                                    </div>
+                                    <button className="w-full py-6 bg-blue-600 text-white rounded-[2rem] font-black shadow-xl hover:bg-blue-700 transition-all">클라우드에 안전하게 보관</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
