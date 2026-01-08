@@ -3,172 +3,140 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Metis Sales Pipeline - Won Kyu-bo</title>
+    <title>Metis Sales Pipeline - Realtime Save</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        window.fb = { initializeApp, getFirestore, doc, setDoc, onSnapshot, collection, getAuth, signInAnonymously, onAuthStateChanged };
+    </script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;700;900&display=swap');
         body { font-family: 'Pretendard', sans-serif; letter-spacing: -0.02em; }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
 <body class="bg-[#f8fafc]">
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useMemo } = React;
+        const { useState, useEffect, useMemo, useCallback } = React;
 
         const Icon = ({ name, className }) => {
-            useEffect(() => { lucide.createIcons(); }, [name]);
+            useEffect(() => { if (window.lucide) lucide.createIcons(); }, [name]);
             return <i data-lucide={name} className={className}></i>;
         };
 
         const App = () => {
+            // --- 1. 상태 관리 ---
             const [selectedBrand, setSelectedBrand] = useState('Mercedes-Benz');
             const [showModal, setShowModal] = useState(false);
             const [selectedBranch, setSelectedBranch] = useState(null);
+            const [meetings, setMeetings] = useState({});
+            const [user, setUser] = useState(null);
+            const [isSaving, setIsSaving] = useState(false);
 
-            // 딜러사 데이터 (국내 수입차 브랜드 총망라)
+            // 폼 입력 상태
+            const [contactPerson, setContactPerson] = useState('');
+            const [contactPhone, setContactPhone] = useState('');
+            const [content, setContent] = useState('');
+
+            // --- 2. Firebase 초기화 ---
+            const firebaseConfig = {
+                apiKey: "AIzaSyAILLjkTNBhLotZydS7_9rsdpSbhH5eAYM",
+                authDomain: "car-pipeline.firebaseapp.com",
+                projectId: "car-pipeline",
+                storageBucket: "car-pipeline.firebasestorage.app",
+                messagingSenderId: "440814227828",
+                appId: "1:440814227828:web:07fb082a081a163c7f9c21"
+            };
+
+            const [db, setDb] = useState(null);
+            const appId = 'car-pipeline-master-v1';
+
+            useEffect(() => {
+                const interval = setInterval(() => {
+                    if (window.fb) {
+                        const app = window.fb.initializeApp(firebaseConfig);
+                        const firestore = window.fb.getFirestore(app);
+                        const auth = window.fb.getAuth(app);
+                        setDb(firestore);
+
+                        window.fb.signInAnonymously(auth).catch(err => console.error("인증 실패:", err));
+                        window.fb.onAuthStateChanged(auth, (u) => setUser(u));
+                        
+                        clearInterval(interval);
+                    }
+                }, 100);
+            }, []);
+
+            // --- 3. 실시간 데이터 수신 ---
+            useEffect(() => {
+                if (!db || !user) return;
+                const q = window.fb.collection(db, 'artifacts', appId, 'public', 'data', 'meetingLogs');
+                const unsubscribe = window.fb.onSnapshot(q, (snapshot) => {
+                    const data = {};
+                    snapshot.forEach((docSnap) => {
+                        data[docSnap.id] = docSnap.data().logs || [];
+                    });
+                    setMeetings(data);
+                });
+                return () => unsubscribe();
+            }, [db, user]);
+
+            // --- 4. 브랜드 데이터 (이전 요청하신 전체 데이터) ---
             const brandData = useMemo(() => ({
-                'Mercedes-Benz': {
-                    color: 'bg-slate-900',
-                    dealers: [
-                        { name: '한성자동차', branches: ['청담', '강남', '서초', '용산', '마곡', '성남', '수원', '대전', '부산', '강릉'] },
-                        { name: 'HS효성더클래스', branches: ['강남대로', '송파', '분당', '안양', '천안', '청주', '구리', '용인'] },
-                        { name: '모터원', branches: ['일산', '의정부', '파주', '고양', '양주'] },
-                        { name: 'KCC오토', branches: ['강서', '한남', '금천', '부천', '김포', '제주'] },
-                        { name: '중앙모터스', branches: ['대구', '포항', '경산'] },
-                        { name: '스타자동차', branches: ['해운대', '금정', '울산'] },
-                        { name: '경남자동차', branches: ['창원', '진주'] },
-                        { name: '교학모터스', branches: ['동대문'] },
-                        { name: '진모터스', branches: ['전주', '군산', '순천'] }
-                    ]
-                },
-                'BMW': {
-                    color: 'bg-blue-700',
-                    dealers: [
-                        { name: '코오롱모터스', branches: ['강남', '삼성', '역삼', '분당', '부천', '대전', '대구', '부산', '광주'] },
-                        { name: '한독모터스', branches: ['서초', '방배', '용산', '수원', '분당', '상무', '수성'] },
-                        { name: '도이치모터스', branches: ['성수', '잠실', '대치', '하남', '수원', '원주', '제주'] },
-                        { name: '바바리안모터스', branches: ['송도', '인천', '일산', '계양', '김포', '고양'] },
-                        { name: '동성모터스', branches: ['해운대', '창원', '울산', '진주', '포항'] },
-                        { name: '삼천리모터스', branches: ['청주', '천안', '세종', '안산', '안양'] },
-                        { name: '내쇼날모터스', branches: ['전주', '군산', '목포', '서산'] }
-                    ]
-                },
-                'Audi': {
-                    color: 'bg-red-800',
-                    dealers: [
-                        { name: '고진모터스', branches: ['도산대로', '수원', '광주', '전주', '대전', '천안', '목포'] },
-                        { name: '태안모터스', branches: ['남산', '도곡', '송도', '개포', '방이', '일산', '인천'] },
-                        { name: '위본모터스', branches: ['분당', '서초', '안양', '동탄'] },
-                        { name: '코오롱아우토', branches: ['대치', '잠실', '서대문'] },
-                        { name: '유카로오토모빌', branches: ['해운대', '창원', '울산', '진주', '제주'] },
-                        { name: '중부모터스', branches: ['대구'] }
-                    ]
-                },
-                'Volvo': {
-                    color: 'bg-[#003057]',
-                    dealers: [
-                        { name: '코오롱오토모티브', branches: ['서초', '송파', '판교', '의정부', '천안', '울산', '원주'] },
-                        { name: '에이치모터스', branches: ['강남', '대치', '신정', '인천', '수원', '대전'] },
-                        { name: '아주오토리움', branches: ['목동', '일산', '안양', '부천', '고양'] },
-                        { name: '아이언모터스', branches: ['해운대', '광안', '창원'] },
-                        { name: '아이비모터스', branches: ['광주', '전주', '제주'] },
-                        { name: '태영모터스', branches: ['대구', '포항'] }
-                    ]
-                },
-                'Porsche': {
-                    color: 'bg-red-600',
-                    dealers: [
-                        { name: 'SSCL', branches: ['대치', '서초', '청담', '분당', '부산', '인천'] },
-                        { name: '아우토슈타트', branches: ['일산', '대구', '대전'] },
-                        { name: '도이치아우토', branches: ['수원', '광주', '창원'] },
-                        { name: '세영모빌리티', branches: ['잠실', '송파', '성수'] }
-                    ]
-                },
-                'Lexus': {
-                    color: 'bg-slate-700',
-                    dealers: [
-                        { name: '엘앤티렉서스', branches: ['도산대로', '강동', '광진', '수원', '안산'] },
-                        { name: '천우모터스', branches: ['강남', '서초', '일산', '안양'] },
-                        { name: '동일모터스', branches: ['부산', '창원', '울산', '제주'] },
-                        { name: '중부모터스', branches: ['대구', '대전'] },
-                        { name: '와이엠에스', branches: ['광주', '전주'] }
-                    ]
-                },
-                'Tesla': {
-                    color: 'bg-[#e82127]',
-                    dealers: [
-                        { name: '테슬라코리아(직영)', branches: ['신사', '청담', '여의도', '하남', '분당', '대구', '부산', '제주'] }
-                    ]
-                },
-                'Land Rover': {
-                    color: 'bg-[#005A2B]',
-                    dealers: [
-                        { name: 'KCC오토모빌', branches: ['서초', '분당', '일산', '제주'] },
-                        { name: '효성프리미어', branches: ['강서', '부산', '울산'] },
-                        { name: '아주네트웍스', branches: ['한남', '인천', '부천'] },
-                        { name: '천우오토모빌', branches: ['강남', '송파'] }
-                    ]
-                },
-                'Jeep': {
-                    color: 'bg-[#1D3C34]',
-                    dealers: [
-                        { name: '렉스모터스', branches: ['청담', '서초'] },
-                        { name: '비전모터스', branches: ['분당', '수원', '창원'] },
-                        { name: '프리미어오토', branches: ['강서', '인천', '제주'] },
-                        { name: '우신모터스', branches: ['대전'] }
-                    ]
-                },
-                'Volkswagen': {
-                    color: 'bg-[#001E50]',
-                    dealers: [
-                        { name: '클라쎄오토', branches: ['강남', '방배', '수원', '용인', '천안'] },
-                        { name: '마이스터모터스', branches: ['한남', '서초', '마포', '인천'] },
-                        { name: '아우토플라츠', branches: ['문정', '판교', '안양', '분당'] },
-                        { name: '지엔비오토모빌', branches: ['대구', '포항'] }
-                    ]
-                },
-                'Ford/Lincoln': {
-                    color: 'bg-[#003478]',
-                    dealers: [
-                        { name: '선인자동차', branches: ['강남', '동대문', '인천', '수원', '대구', '부산'] },
-                        { name: '프리미어모터스', branches: ['방배', '영등포', '평촌', '부천', '포항'] },
-                        { name: '더파크모터스', branches: ['마포', '의정부', '구리', '원주'] }
-                    ]
-                },
-                'Ferrari/Maserati': {
-                    color: 'bg-red-700',
-                    dealers: [
-                        { name: 'FMK(포르자모터스코리아)', branches: ['강남', '한남', '분당', '대전', '대구', '광주', '부산'] }
-                    ]
-                },
-                'Lamborghini': {
-                    color: 'bg-[#bf9b30]',
-                    dealers: [
-                        { name: 'SQDA모터스', branches: ['삼성', '부산'] }
-                    ]
-                },
-                'Rolls-Royce': {
-                    color: 'bg-[#632945]',
-                    dealers: [
-                        { name: '코오롱모터스', branches: ['청담 부티크', '판교', '부산'] }
-                    ]
-                },
-                'Bentley': {
-                    color: 'bg-[#004225]',
-                    dealers: [
-                        { name: '벤틀리서울(참존)', branches: ['청담 타워', '동대문 센터', '부산'] }
-                    ]
-                }
+                'Mercedes-Benz': { color: 'bg-slate-900', dealers: [{ name: '한성자동차', branches: ['청담', '강남', '서초', '용산', '마곡', '성남', '수원', '대전', '부산', '강릉'] }, { name: 'HS효성더클래스', branches: ['강남대로', '송파', '분당', '안양', '천안', '청주', '구리', '용인'] }, { name: '모터원', branches: ['일산', '의정부', '파주', '고양', '양주'] }, { name: 'KCC오토', branches: ['강서', '한남', '금천', '부천', '김포', '제주'] }, { name: '중앙모터스', branches: ['대구', '포항', '경산'] }, { name: '스타자동차', branches: ['해운대', '금정', '울산'] }, { name: '경남자동차', branches: ['창원', '진주'] }, { name: '교학모터스', branches: ['동대문'] }, { name: '진모터스', branches: ['전주', '군산', '순천'] }] },
+                'BMW': { color: 'bg-blue-700', dealers: [{ name: '코오롱모터스', branches: ['강남', '삼성', '역삼', '분당', '부천', '대전', '대구', '부산', '광주'] }, { name: '한독모터스', branches: ['서초', '방배', '용산', '수원', '분당', '상무', '수성'] }, { name: '도이치모터스', branches: ['성수', '잠실', '대치', '하남', '수원', '원주', '제주'] }, { name: '바바리안모터스', branches: ['송도', '인천', '일산', '계양', '김포', '고양'] }, { name: '동성모터스', branches: ['해운대', '창원', '울산', '진주', '포항'] }, { name: '삼천리모터스', branches: ['청주', '천안', '세종', '안산', '안양'] }, { name: '내쇼날모터스', branches: ['전주', '군산', '목포', '서산'] }] },
+                'Audi': { color: 'bg-red-800', dealers: [{ name: '고진모터스', branches: ['도산대로', '수원', '광주', '전주', '대전', '천안', '목포'] }, { name: '태안모터스', branches: ['남산', '도곡', '송도', '개포', '방이', '일산', '인천'] }, { name: '위본모터스', branches: ['분당', '서초', '안양', '동탄'] }, { name: '유카로오토모빌', branches: ['해운대', '창원', '울산', '진주', '제주'] }] },
+                'Porsche': { color: 'bg-red-600', dealers: [{ name: 'SSCL', branches: ['대치', '서초', '청담', '분당', '부산', '인천'] }, { name: '아우토슈타트', branches: ['일산', '대구', '대전'] }, { name: '도이치아우토', branches: ['수원', '광주', '창원'] }, { name: '세영모빌리티', branches: ['잠실', '송파', '성수'] }] },
+                'Volvo': { color: 'bg-[#003057]', dealers: [{ name: '코오롱오토모티브', branches: ['서초', '송파', '판교', '의정부', '천안', '울산', '원주'] }, { name: '에이치모터스', branches: ['강남', '대치', '신정', '인천', '수원', '대전'] }] },
+                'Tesla': { color: 'bg-[#e82127]', dealers: [{ name: '테슬라코리아(직영)', branches: ['신사', '청담', '여의도', '하남', '분당', '대구', '부산', '제주'] }] },
+                'Land Rover': { color: 'bg-[#005A2B]', dealers: [{ name: 'KCC오토모빌', branches: ['서초', '분당', '일산', '제주'] }] },
+                'Ferrari/Maserati': { color: 'bg-red-700', dealers: [{ name: 'FMK', branches: ['강남', '한남', '분당', '대전', '대구', '광주', '부산'] }] },
+                'Rolls-Royce': { color: 'bg-[#632945]', dealers: [{ name: '코오롱모터스', branches: ['청담 부티크', '판교', '부산'] }] },
+                'Bentley': { color: 'bg-[#004225]', dealers: [{ name: '벤틀리서울(참존)', branches: ['청담 타워', '동대문 센터', '부산'] }] }
             }), []);
+
+            // --- 5. 저장 로직 ---
+            const saveMeeting = async () => {
+                if (!db || !user || !contactPerson || !content) return;
+                setIsSaving(true);
+
+                const safeBrandName = selectedBrand.replace(/\//g, '_');
+                const branchKey = `${safeBrandName}-${selectedBranch.dealer}-${selectedBranch.branch}`;
+                
+                const newLog = {
+                    id: Date.now(),
+                    date: new Date().toISOString().split('T')[0],
+                    person: contactPerson,
+                    phone: contactPhone,
+                    content: content,
+                    createdBy: user.uid
+                };
+
+                const currentLogs = meetings[branchKey] || [];
+                try {
+                    const docRef = window.fb.doc(db, 'artifacts', appId, 'public', 'data', 'meetingLogs', branchKey);
+                    await window.fb.setDoc(docRef, { logs: [...currentLogs, newLog] });
+                    setShowModal(false);
+                    setContactPerson(''); setContactPhone(''); setContent('');
+                } catch (err) {
+                    alert("저장에 실패했습니다. 권한 설정을 확인해 주세요!");
+                } finally {
+                    setIsSaving(false);
+                }
+            };
 
             const openModal = (dealer, branch) => {
                 setSelectedBranch({ dealer, branch });
@@ -177,128 +145,86 @@
 
             return (
                 <div className="min-h-screen pb-20">
-                    {/* Header */}
                     <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-xl border-b border-slate-200 px-6 py-6">
                         <div className="max-w-[1400px] mx-auto flex justify-between items-center">
                             <div>
-                                <h1 className="text-3xl font-black text-slate-900 tracking-tighter">METIS PIPELINE</h1>
-                                <p className="text-slate-400 text-xs font-bold mt-1 uppercase tracking-widest flex items-center gap-2">
-                                    <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-                                    Won Kyu-bo Team Leader
+                                <h1 className="text-3xl font-black text-slate-900 tracking-tighter uppercase">Metis Car Pipeline</h1>
+                                <p className="text-slate-400 text-[10px] font-black mt-1 flex items-center gap-2">
+                                    <span className={`w-2 h-2 rounded-full ${user ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`}></span>
+                                    {user ? 'CLOUD CONNECTED' : 'CONNECTING...'} | TEAM LEADER WON KYU-BO
                                 </p>
-                            </div>
-                            <div className="hidden md:flex items-center gap-8">
-                                <div className="text-right">
-                                    <p className="text-[10px] font-black text-slate-400">TOTAL BRANDS</p>
-                                    <p className="text-2xl font-black text-slate-900">{Object.keys(brandData).length}</p>
-                                </div>
-                                <div className="w-px h-8 bg-slate-200"></div>
-                                <div className="text-right">
-                                    <p className="text-[10px] font-black text-slate-400">ACTIVE LOGS</p>
-                                    <p className="text-2xl font-black text-blue-600">LIVE</p>
-                                </div>
                             </div>
                         </div>
                     </header>
 
                     <main className="max-w-[1400px] mx-auto px-6 mt-10">
-                        {/* Brand Navigation */}
+                        {/* 브랜드 네비게이션 */}
                         <div className="bg-white p-2 rounded-[2.5rem] shadow-xl shadow-slate-200/50 mb-12 border border-slate-100 overflow-hidden">
                             <div className="flex flex-wrap gap-2 p-2 max-h-[200px] overflow-y-auto custom-scrollbar">
                                 {Object.keys(brandData).map((brand) => (
-                                    <button
-                                        key={brand}
-                                        onClick={() => setSelectedBrand(brand)}
-                                        className={`px-6 py-3 rounded-2xl font-black text-xs transition-all border-2 whitespace-nowrap ${
-                                            selectedBrand === brand 
-                                            ? `${brandData[brand].color} text-white border-transparent shadow-lg scale-105` 
-                                            : 'bg-white text-slate-500 border-slate-50 hover:border-blue-200 hover:text-blue-600'
-                                        }`}
-                                    >
+                                    <button key={brand} onClick={() => setSelectedBrand(brand)} className={`px-6 py-3 rounded-2xl font-black text-xs transition-all border-2 ${selectedBrand === brand ? `${brandData[brand].color} text-white border-transparent shadow-lg scale-105` : 'bg-white text-slate-500 border-slate-50 hover:border-blue-200'}`}>
                                         {brand}
                                     </button>
                                 ))}
                             </div>
                         </div>
 
-                        {/* Banner */}
-                        <div className={`w-full p-16 md:p-24 rounded-[4rem] shadow-2xl text-white text-center mb-16 transition-all duration-700 transform hover:scale-[1.01] ${brandData[selectedBrand].color}`}>
-                            <span className="inline-block px-4 py-1 bg-white/20 rounded-full text-[10px] font-bold uppercase tracking-[0.3em] mb-6">Strategic Target Brand</span>
+                        {/* 메인 배너 */}
+                        <div className={`w-full p-16 md:p-24 rounded-[4rem] shadow-2xl text-white text-center mb-16 transition-all duration-700 ${brandData[selectedBrand].color}`}>
                             <h2 className="text-6xl md:text-8xl font-black tracking-tighter uppercase leading-none">{selectedBrand}</h2>
-                            <div className="h-1.5 w-32 bg-white/30 rounded-full mx-auto mt-10"></div>
                         </div>
 
-                        {/* Grid System */}
+                        {/* 딜러 그리드 */}
                         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10">
                             {brandData[selectedBrand].dealers.map((dealer, idx) => (
-                                <div key={idx} className="bg-white p-10 rounded-[4rem] border border-slate-100 shadow-sm flex flex-col group transition-all hover:shadow-2xl hover:-translate-y-2">
-                                    <div className="flex items-center justify-between mb-10">
-                                        <div className="flex items-center gap-4">
-                                            <div className={`p-4 rounded-3xl group-hover:bg-white transition-colors ${brandData[selectedBrand].color} text-white group-hover:text-slate-900 group-hover:border group-hover:border-slate-100`}>
-                                                <Icon name="building-2" className="w-7 h-7" />
-                                            </div>
-                                            <div>
-                                                <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Dealer Partner</p>
-                                                <h3 className="text-2xl font-black text-slate-800 tracking-tight">{dealer.name}</h3>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-3 flex-1">
-                                        {dealer.branches.map((branch, bIdx) => (
-                                            <button
-                                                key={bIdx}
-                                                onClick={() => openModal(dealer.name, branch)}
-                                                className="p-4 rounded-[2rem] text-[13px] font-black border-2 border-transparent bg-slate-50 text-slate-500 hover:border-blue-400 hover:bg-white hover:text-blue-600 transition-all text-left group/btn relative overflow-hidden"
-                                            >
-                                                <span className="relative z-10">{branch}</span>
-                                                <Icon name="plus" className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 opacity-0 group-hover/btn:opacity-100 transition-opacity" />
-                                            </button>
-                                        ))}
+                                <div key={idx} className="bg-white p-10 rounded-[4rem] border border-slate-100 shadow-sm flex flex-col group transition-all hover:shadow-2xl">
+                                    <h3 className="text-2xl font-black text-slate-800 mb-8 tracking-tight flex items-center gap-3">
+                                        <Icon name="building-2" className="w-6 h-6 text-slate-300" /> {dealer.name}
+                                    </h3>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        {dealer.branches.map((branch, bIdx) => {
+                                            const logCount = meetings[`${selectedBrand.replace(/\//g, '_')}-${dealer.name}-${branch}`]?.length || 0;
+                                            return (
+                                                <button key={bIdx} onClick={() => openModal(dealer.name, branch)} className={`p-4 rounded-[2rem] text-[13px] font-black border-2 transition-all text-left relative ${logCount > 0 ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-slate-50 border-transparent text-slate-400 hover:border-blue-400'}`}>
+                                                    {branch}
+                                                    {logCount > 0 && <span className="absolute top-2 right-4 text-[9px] bg-blue-500 text-white px-2 py-0.5 rounded-full">{logCount}</span>}
+                                                </button>
+                                            );
+                                        })}
                                     </div>
                                 </div>
                             ))}
                         </div>
                     </main>
 
-                    {/* Modal */}
+                    {/* 저장 모달 */}
                     {showModal && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-900/90 backdrop-blur-md animate-in fade-in duration-300">
-                            <div className="bg-white w-full max-w-2xl rounded-[4rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-900/90 backdrop-blur-md">
+                            <div className="bg-white w-full max-w-2xl rounded-[4rem] shadow-2xl overflow-hidden animate-in zoom-in-95">
                                 <div className={`p-12 text-white flex justify-between items-start ${brandData[selectedBrand].color}`}>
                                     <div>
-                                        <p className="text-xs font-black opacity-60 mb-3 uppercase tracking-widest">{selectedBrand} • {selectedBranch?.dealer}</p>
-                                        <h2 className="text-4xl font-black tracking-tighter">{selectedBranch?.branch} 전시장 미팅</h2>
+                                        <p className="text-xs font-black opacity-60 mb-2 uppercase tracking-widest">{selectedBranch?.dealer}</p>
+                                        <h2 className="text-4xl font-black tracking-tighter">{selectedBranch?.branch} 미팅 기록</h2>
                                     </div>
-                                    <button onClick={() => setShowModal(false)} className="bg-white/10 p-4 rounded-full hover:bg-white/20 transition-all border border-white/10">
-                                        <Icon name="x" className="w-6 h-6" />
-                                    </button>
+                                    <button onClick={() => setShowModal(false)} className="bg-white/10 p-4 rounded-full"><Icon name="x" className="w-6 h-6" /></button>
                                 </div>
-
-                                <div className="p-12 space-y-8">
-                                    <div className="grid grid-cols-2 gap-6">
-                                        <div className="space-y-3">
-                                            <label className="text-xs font-black text-slate-400 ml-2 uppercase">Person in Charge</label>
-                                            <div className="relative">
-                                                <Icon name="user" className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
-                                                <input type="text" placeholder="성함" className="w-full pl-14 pr-6 py-5 bg-slate-50 rounded-[2rem] text-sm font-bold border-2 border-transparent focus:border-blue-500 focus:bg-white outline-none transition-all" />
+                                <div className="p-12 space-y-6">
+                                    {/* 히스토리 미리보기 */}
+                                    <div className="max-h-40 overflow-y-auto custom-scrollbar space-y-2 mb-4">
+                                        {(meetings[`${selectedBrand.replace(/\//g, '_')}-${selectedBranch?.dealer}-${selectedBranch?.branch}`] || []).map(m => (
+                                            <div key={m.id} className="p-4 bg-slate-50 rounded-2xl text-xs font-bold border border-slate-100">
+                                                <p className="text-blue-600 mb-1">{m.date} | {m.person}</p>
+                                                <p className="text-slate-600">{m.content}</p>
                                             </div>
-                                        </div>
-                                        <div className="space-y-3">
-                                            <label className="text-xs font-black text-slate-400 ml-2 uppercase">Contact Info</label>
-                                            <div className="relative">
-                                                <Icon name="phone" className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
-                                                <input type="tel" placeholder="연락처" className="w-full pl-14 pr-6 py-5 bg-slate-50 rounded-[2rem] text-sm font-bold border-2 border-transparent focus:border-blue-500 focus:bg-white outline-none transition-all" />
-                                            </div>
-                                        </div>
+                                        ))}
                                     </div>
-                                    <div className="space-y-3">
-                                        <label className="text-xs font-black text-slate-400 ml-2 uppercase">Meeting Summary</label>
-                                        <textarea rows="5" placeholder="미팅 내용을 기록해 주세요..." className="w-full p-8 bg-slate-50 rounded-[2.5rem] text-sm font-bold border-2 border-transparent focus:border-blue-500 focus:bg-white outline-none transition-all resize-none"></textarea>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <input type="text" placeholder="담당자 성함" value={contactPerson} onChange={e => setContactPerson(e.target.value)} className="p-5 bg-slate-50 rounded-[1.5rem] text-sm font-bold border-2 border-transparent focus:border-blue-500 outline-none" />
+                                        <input type="tel" placeholder="연락처" value={contactPhone} onChange={e => setContactPhone(e.target.value)} className="p-5 bg-slate-50 rounded-[1.5rem] text-sm font-bold border-2 border-transparent focus:border-blue-500 outline-none" />
                                     </div>
-                                    <button className="w-full py-7 bg-blue-600 text-white rounded-[2.5rem] font-black text-lg shadow-2xl shadow-blue-500/30 hover:bg-blue-700 transition-all active:scale-95 flex items-center justify-center gap-3">
-                                        <Icon name="cloud" className="w-6 h-6" />
-                                        클라우드 서버에 동기화
+                                    <textarea rows="4" placeholder="미팅 주요 내용을 입력하세요..." value={content} onChange={e => setContent(e.target.value)} className="w-full p-6 bg-slate-50 rounded-[2rem] text-sm font-bold border-2 border-transparent focus:border-blue-500 outline-none resize-none"></textarea>
+                                    <button onClick={saveMeeting} disabled={isSaving} className="w-full py-6 bg-blue-600 text-white rounded-[2.5rem] font-black text-lg shadow-xl hover:bg-blue-700 transition-all active:scale-95 disabled:bg-slate-300">
+                                        {isSaving ? "처리 중..." : "저장"}
                                     </button>
                                 </div>
                             </div>
