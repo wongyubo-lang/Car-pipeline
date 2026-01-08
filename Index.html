@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Car Distribution Pipeline</title>
+    <!-- Tailwind CSS (디자인) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React & ReactDOM (심장) -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel (번역기) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Lucide Icons (아이콘) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/lucide-react@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap');
+        body { font-family: 'Noto Sans KR', sans-serif; background-color: #f8fafc; }
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f8fafc; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // 주인님의 Firebase 설정 (여기에 실제 값을 넣으세요!)
+        const firebaseConfig = {
+            apiKey: "AIzaSyAILLjkTNBhLotZydS7_9rsdpSbhH5eAYM",
+            authDomain: "car-pipeline.firebaseapp.com",
+            projectId: "car-pipeline",
+            storageBucket: "car-pipeline.firebasestorage.app",
+            messagingSenderId: "440814227828",
+            appId: "1:440814227828:web:07fb082a081a163c7f9c21"
+        };
+
+        // 초기화
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = 'sales-line-stable-v1'; // 고정된 앱 아이디
+
+        window.fb = { auth, db, appId, collection, doc, setDoc, onSnapshot, signInAnonymously, onAuthStateChanged };
+    </script>
+
+    <script type="text/babel">
+        const { useState, useEffect, useCallback } = React;
+        const { 
+            ChevronRight, Building2, Store, Car, MapPin, Search, 
+            Calendar, User, FileText, Plus, Save, X, History, ClipboardCheck, Cloud, Trash2, AlertCircle, Phone
+        } = lucideReact;
+
+        const App = () => {
+            const [selectedBrand, setSelectedBrand] = useState('BMW');
+            const [selectedBranch, setSelectedBranch] = useState(null);
+            const [meetings, setMeetings] = useState({});
+            const [showModal, setShowModal] = useState(false);
+            const [user, setUser] = useState(null);
+            const [loading, setLoading] = useState(true);
+            const [isSaving, setIsSaving] = useState(false);
+            const [saveError, setSaveError] = useState('');
+            const [deleteConfirmId, setDeleteConfirmId] = useState(null);
+
+            const [contactPerson, setContactPerson] = useState('');
+            const [contactPhone, setContactPhone] = useState('');
+            const [content, setContent] = useState('');
+            const [meetingDate, setMeetingDate] = useState(new Date().toISOString().split('T')[0]);
+
+            // Firebase 대기 로직
+            useEffect(() => {
+                const checkFB = setInterval(() => {
+                    if (window.fb) {
+                        clearInterval(checkFB);
+                        const { auth, signInAnonymously, onAuthStateChanged } = window.fb;
+                        
+                        signInAnonymously(auth).catch(err => console.error("Auth Error:", err));
+                        
+                        onAuthStateChanged(auth, (currentUser) => {
+                            setUser(currentUser);
+                            setLoading(false);
+                        });
+                    }
+                }, 500);
+                return () => clearInterval(checkFB);
+            }, []);
+
+            // 실시간 데이터 수신
+            useEffect(() => {
+                if (!user || !window.fb) return;
+                const { db, appId, collection, onSnapshot } = window.fb;
+                
+                const q = collection(db, 'artifacts', appId, 'public', 'data', 'meetingLogs');
+                const unsubscribe = onSnapshot(q, (snapshot) => {
+                    const data = {};
+                    snapshot.forEach((docSnap) => { data[docSnap.id] = docSnap.data().logs || []; });
+                    setMeetings(data);
+                });
+                return () => unsubscribe();
+            }, [user]);
+
+            const brandData = {
+                'Mercedes-Benz': { color: 'bg-slate-900', dealers: [{ name: '한성자동차', branches: ['청담', '강남', '서초', '용산', '마곡', '성남', '수원', '대전', '부산', '강릉', '춘천'] }, { name: 'HS효성더클래스', branches: ['강남대로', '송파', '분당 정자', '안양 평촌', '천안', '청주', '구리', '용인'] }, { name: '모터원', branches: ['일산', '의정부', '파주', '고양', '양주'] }, { name: 'KCC오토', branches: ['강서 목동', '한남', '금천', '부천', '김포', '제주'] }, { name: '교학모터스', branches: ['동대문 전시장'] }, { name: '중앙모터스', branches: ['대구', '포항', '경산'] }, { name: '스타자동차', branches: ['부산 해운대', '금정', '울산'] }, { name: '경남자동차', branches: ['진주', '창원'] }, { name: '진모터스', branches: ['전주', '군산', '순천'] }] },
+                'BMW': { color: 'bg-blue-600', dealers: [{ name: '코오롱모터스', branches: ['강남', '삼성', '역삼', '분당', '부천', '대전', '광주', '대구', '부산', '춘천'] }, { name: '한독모터스', branches: ['서초', '방배', '용산', '수원', '분당', '상무', '수성'] }, { name: '도이치모터스', branches: ['성수', '잠실', '대치', '하남 스타필드', '수원 오토월드', '원주', '제주'] }, { name: '바바리안모터스', branches: ['송도', '인천', '일산', '계양', '김포', '고양'] }, { name: '동성모터스', branches: ['부산 해운대', '창원', '울산', '진주', '포항'] }, { name: '내쇼날모터스', branches: ['전주', '군산', '목포', '서산'] }, { name: '삼천리모터스', branches: ['청주', '천안', '세종', '안산', '안양'] }] },
+                'Audi': { color: 'bg-red-700', dealers: [{ name: '고진모터스', branches: ['도산대로', '수원', '광주', '전주', '대전', '천안', '목포'] }, { name: '태안모터스', branches: ['남산', '도곡', '송도', '개포', '방이', '일산', '인천'] }, { name: '위본모터스', branches: ['분당', '서초', '안양', '동탄'] }, { name: '유카로오토모빌', branches: ['부산 해운대', '창원', '울산', '진주', '제주'] }] },
+                'Volvo': { color: 'bg-[#003057]', dealers: [{ name: '코오롱오토모티브', branches: ['서초', '송파', '판교', '의정부', '천안', '울산', '원주', '강릉'] }, { name: '에이치모터스', branches: ['강남', '대치', '신정', '인천', '수원', '대전'] }, { name: '아주오토리움', branches: ['목동', '일산', '안양', '부천', '고양'] }, { name: '아이언모터스', branches: ['부산 해운대', '광안', '창원'] }, { name: '아이비모터스', branches: ['광주', '전주', '제주', '군산'] }, { name: '천하자동차', branches: ['용산', '분당'] }, { name: '태영모터스', branches: ['대구', '포항'] }] },
+                'Volkswagen': { color: 'bg-[#001E50]', dealers: [{ name: '클라쎄오토', branches: ['강남', '방배', '수원', '용인', '천안', '구리'] }, { name: '마이스터모터스', branches: ['한남', '서초', '마포', '인천', '부천'] }, { name: '아우토플라츠', branches: ['문정', '판교', '안양', '분당', '하남'] }, { name: '유카로오토모빌', branches: ['부산', '창원', '울산', '제주'] }, { name: '지엔비오토모빌', branches: ['대구', '포항'] }] },
+                'Porsche': { color: 'bg-red-600', dealers: [{ name: 'SSCL', branches: ['대치', '서초', '청담', '분당 판교', '부산', '인천'] }, { name: '아우토슈타트', branches: ['일산', '대구', '대전'] }, { name: '도이치아우토', branches: ['수원', '광주', '창원'] }, { name: '세영모빌리티', branches: ['잠실', '송파', '성수'] }] },
+                'Lexus': { color: 'bg-slate-700', dealers: [{ name: '천우모터스', branches: ['강남', '서초', '일산', '안양'] }, { name: '엘앤티렉서스', branches: ['도산대로', '강동', '광진', '수원', '안산'] }, { name: '동일모터스', branches: ['부산', '창원', '울산', '진주', '제주'] }, { name: '중부모터스', branches: ['대구', '대전'] }] },
+                'Toyota': { color: 'bg-red-800', dealers: [{ name: '효성토요타', branches: ['강남', '강서', '평촌'] }, { name: '천우모터스', branches: ['용산', '일산'] }, { name: '엘앤티토요타', branches: ['강동', '구리', '안양'] }, { name: 'LS네트웍스', branches: ['인천', '대전'] }, { name: '동일모터스', branches: ['부산', '창원'] }] },
+                'Land Rover': { color: 'bg-[#005A2B]', dealers: [{ name: 'KCC오토모빌', branches: ['서초', '분당', '일산', '제주'] }, { name: '천우오토모빌', branches: ['강남', '송파'] }, { name: '아주네트웍스', branches: ['한남', '인천', '부천'] }, { name: '효성프리미어', branches: ['강서', '부산', '울산'] }] },
+                'Jeep': { color: 'bg-[#1D3C34]', dealers: [{ name: '렉스모터스', branches: ['청담', '서초'] }, { name: '비전모터스', branches: ['분당', '수원', '창원'] }, { name: '프리미어오토', branches: ['강서', '인천', '제주'] }] },
+                'Ford/Lincoln': { color: 'bg-[#003478]', dealers: [{ name: '선인자동차', branches: ['강남', '동대문', '인천', '수원', '대전', '대구', '부산'] }, { name: '프리미어모터스', branches: ['방배', '영등포', '평촌', '부천', '울산', '포항'] }, { name: '더파크모터스', branches: ['마포', '의정부', '구리', '원주', '세종'] }] },
+                'Honda': { color: 'bg-red-600', dealers: [{ name: '안호모터스', branches: ['강남', '인천'] }, { name: '비전모터스', branches: ['서초', '수원'] }, { name: 'KCC모터스', branches: ['일산', '대구'] }] },
+                'Bentley': { color: 'bg-[#004225]', dealers: [{ name: '벤틀리 서울 (참존)', branches: ['청담 타워', '동대문 센터', '부산 전시장', '대구 전시장'] }] },
+                'Rolls-Royce': { color: 'bg-[#632945]', dealers: [{ name: '코오롱모터스', branches: ['청담 부티크', '판교 라운지', '부산 해운대'] }] },
+                'Lamborghini': { color: 'bg-[#DAA520]', dealers: [{ name: 'SQDA 모터스', branches: ['삼성 전시장', '부산 센터'] }] },
+                'Maserati': { color: 'bg-[#002B5C]', dealers: [{ name: 'FMK', branches: ['강남', '한남', '분당', '대전', '대구', '광주', '부산'] }] }
+            };
+
+            const openMeetingModal = (dealerName, branchName) => {
+                setSelectedBranch({ dealer: dealerName, branch: branchName });
+                setContactPerson(''); setContactPhone(''); setContent(''); setSaveError(''); setDeleteConfirmId(null);
+                setMeetingDate(new Date().toISOString().split('T')[0]);
+                setShowModal(true);
+            };
+
+            const saveMeeting = async () => {
+                if (!contactPerson || !content || !user || isSaving) return;
+                setIsSaving(true); setSaveError('');
+                const safeBrandName = selectedBrand.replace(/\//g, '_');
+                const branchKey = `${safeBrandName}-${selectedBranch.dealer}-${selectedBranch.branch}`;
+                const newMeeting = { id: Date.now(), date: meetingDate, person: contactPerson, phone: contactPhone, content: content, createdBy: user.uid };
+                const currentLogs = meetings[branchKey] || [];
+                const updatedLogs = [...currentLogs, newMeeting];
+                try {
+                    const { db, appId, doc, setDoc } = window.fb;
+                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'meetingLogs', branchKey), { logs: updatedLogs });
+                    setShowModal(false);
+                } catch (err) {
+                    setSaveError('저장에 실패했어요!');
+                } finally { setIsSaving(false); }
+            };
+
+            const confirmDelete = async (logId) => {
+                if (!user || isSaving) return;
+                const safeBrandName = selectedBrand.replace(/\//g, '_');
+                const branchKey = `${safeBrandName}-${selectedBranch.dealer}-${selectedBranch.branch}`;
+                const updatedLogs = (meetings[branchKey] || []).filter(m => m.id !== logId);
+                setIsSaving(true);
+                try {
+                    const { db, appId, doc, setDoc } = window.fb;
+                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'meetingLogs', branchKey), { logs: updatedLogs });
+                    setDeleteConfirmId(null);
+                } catch (err) { console.error(err); } finally { setIsSaving(false); }
+            };
+
+            const getMeetingCount = (dealerName, branchName) => {
+                const key = `${selectedBrand.replace(/\//g, '_')}-${dealerName}-${branchName}`;
+                return meetings[key]?.length || 0;
+            };
+
+            if (loading) return <div className="min-h-screen flex items-center justify-center font-bold text-blue-600">연결 중... 멍멍!</div>;
+
+            return (
+                <div className="min-h-screen p-4 md:p-8">
+                    <div className="max-w-6xl mx-auto">
+                        <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-6 bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100">
+                            <div className="text-center md:text-left">
+                                <h1 className="text-3xl md:text-4xl font-black mb-2">Car Distribution Pipeline</h1>
+                                <p className="text-slate-500 font-bold flex items-center gap-2 justify-center md:justify-start">
+                                    <Cloud className={`w-4 h-4 ${user ? 'text-emerald-500' : 'text-slate-300'}`} /> {user ? '클라우드 연결됨' : '연결 중...'}
+                                </p>
+                            </div>
+                            <div className="flex items-center gap-6">
+                                <div className="text-center"><div className="text-[10px] font-black text-slate-400 uppercase">Total Logs</div><div className="text-2xl font-black text-blue-600">{Object.values(meetings).flat().length}건</div></div>
+                                <div className="w-px h-10 bg-slate-100"></div>
+                                <div className="text-center"><div className="text-[10px] font-black text-slate-400 uppercase">Active Areas</div><div className="text-2xl font-black text-slate-800">{Object.keys(meetings).length}곳</div></div>
+                            </div>
+                        </div>
+
+                        <div className="bg-white p-4 rounded-[2rem] shadow-sm mb-12 border border-slate-100 overflow-hidden">
+                            <div className="flex flex-wrap justify-center gap-2 max-h-[300px] overflow-y-auto p-1 custom-scrollbar">
+                                {Object.keys(brandData).map((brand) => (
+                                    <button key={brand} onClick={() => setSelectedBrand(brand)} className={`px-4 py-2 rounded-xl font-black transition-all text-xs md:text-sm whitespace-nowrap border-2 ${selectedBrand === brand ? `${brandData[brand].color} text-white border-transparent shadow-md scale-105` : 'bg-white text-slate-500 hover:bg-slate-50 border-slate-50'}`}>{brand}</button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="space-y-16 pb-20">
+                            <div className="flex flex-col items-center">
+                                <div className={`w-full max-w-2xl p-10 rounded-[4rem] shadow-2xl text-white text-center transform transition-all ${brandData[selectedBrand].color}`}>
+                                    <span className="inline-block px-4 py-1 bg-white/20 rounded-full text-[10px] font-black tracking-widest mb-4">Strategic Target</span>
+                                    <h2 className="text-4xl md:text-6xl font-black tracking-tight uppercase">{selectedBrand}</h2>
+                                </div>
+                                <div className="h-20 w-2 bg-gradient-to-b from-slate-200 to-transparent rounded-full mt-2"></div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-2">
+                                {brandData[selectedBrand].dealers.map((dealer, idx) => (
+                                    <div key={idx} className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm hover:shadow-2xl hover:border-blue-200 transition-all h-full flex flex-col">
+                                        <div className="flex items-center gap-3 mb-8">
+                                            <div className="bg-slate-50 p-3 rounded-2xl"><Building2 className="w-6 h-6 text-blue-600" /></div>
+                                            <span className="text-[11px] font-black text-slate-300 uppercase">Dealer Partner</span>
+                                        </div>
+                                        <h3 className="text-2xl font-black text-slate-800 mb-8">{dealer.name}</h3>
+                                        <div className="flex-1 space-y-3">
+                                            <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 mb-4 uppercase border-b border-slate-50 pb-2"><MapPin className="w-3.5 h-3.5" /> Regional Branches</div>
+                                            <div className="grid grid-cols-2 gap-2">
+                                                {dealer.branches.map((branch, bIdx) => {
+                                                    const count = getMeetingCount(dealer.name, branch);
+                                                    return (
+                                                        <button key={bIdx} onClick={() => openMeetingModal(dealer.name, branch)} className={`relative p-3 rounded-2xl text-[11px] font-black transition-all border-2 text-left ${count > 0 ? 'bg-blue-50 border-blue-100 text-blue-700 shadow-sm' : 'bg-slate-50 border-transparent text-slate-500 hover:border-blue-200 hover:bg-white'}`}>
+                                                            <span className="block truncate">{branch}</span>
+                                                            {count > 0 && <div className="mt-1 flex items-center gap-1 text-[9px] text-blue-600 bg-white w-fit px-1.5 py-0.5 rounded-lg shadow-sm"><History className="w-2.5 h-2.5" /> {count}회</div>}
+                                                            <Plus className="absolute top-2 right-2 w-3.5 h-3.5 opacity-0 hover:opacity-100 text-blue-600" />
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    {showModal && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-md">
+                            <div className="bg-white w-full max-w-xl rounded-[3rem] shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+                                <div className={`p-10 text-white flex justify-between items-start ${brandData[selectedBrand].color}`}>
+                                    <div><div className="text-[10px] font-black uppercase opacity-70 mb-2">{selectedBrand} • {selectedBranch.dealer}</div><h2 className="text-3xl font-black">{selectedBranch.branch} 미팅 일지</h2></div>
+                                    <button onClick={() => setShowModal(false)} className="bg-white/20 p-2.5 rounded-full"><X className="w-5 h-5" /></button>
+                                </div>
+                                <div className="p-10 space-y-8 overflow-y-auto custom-scrollbar flex-1">
+                                    {meetings[`${selectedBrand.replace(/\//g, '_')}-${selectedBranch.dealer}-${selectedBranch.branch}`]?.length > 0 && (
+                                        <div className="space-y-4">
+                                            <div className="flex items-center gap-2 text-xs font-black text-slate-400 uppercase tracking-widest"><History className="w-4 h-4 text-blue-600" /> 미팅 히스토리</div>
+                                            <div className="space-y-3">
+                                                {meetings[`${selectedBrand.replace(/\//g, '_')}-${selectedBranch.dealer}-${selectedBranch.branch}`].map(m => (
+                                                    <div key={m.id} className="relative group">
+                                                        {deleteConfirmId === m.id ? (
+                                                            <div className="bg-red-50 p-5 rounded-3xl border-2 border-red-200 flex items-center justify-between">
+                                                                <span className="text-sm font-black text-red-700">정말 삭제하시겠습니까?</span>
+                                                                <div className="flex gap-2">
+                                                                    <button onClick={() => setDeleteConfirmId(null)} className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-500">취소</button>
+                                                                    <button onClick={() => confirmDelete(m.id)} className="px-3 py-1.5 bg-red-600 rounded-xl text-xs font-bold text-white shadow-sm">삭제확인</button>
+                                                                </div>
+                                                            </div>
+                                                        ) : (
+                                                            <div className="bg-slate-50 p-5 rounded-3xl border border-slate-100 hover:border-blue-100 transition-all flex justify-between items-start gap-4">
+                                                                <div className="flex-1">
+                                                                    <div className="flex justify-between items-center mb-2">
+                                                                        <span className="text-[11px] font-black text-blue-600 bg-white px-2 py-0.5 rounded-lg shadow-xs">{m.date}</span>
+                                                                        <div className="flex flex-col"><span className="text-xs font-bold text-slate-800 flex items-center gap-1.5"><User className="w-3 h-3 text-slate-400" /> {m.person}</span>{m.phone && <span className="text-[10px] font-bold text-slate-400 flex items-center gap-1.5"><Phone className="w-3 h-3" /> {m.phone}</span>}</div>
+                                                                    </div>
+                                                                    <p className="text-sm text-slate-600 leading-relaxed mt-2 bg-white/50 p-3 rounded-xl border border-slate-100">{m.content}</p>
+                                                                </div>
+                                                                <button onClick={() => setDeleteConfirmId(m.id)} className="p-2 text-slate-300 hover:text-red-500 transition-all"><Trash2 className="w-4 h-4" /></button>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                    <div className="space-y-5 border-t border-slate-100 pt-8">
+                                        <div className="flex items-center gap-2 text-xs font-black text-slate-400 uppercase tracking-widest"><ClipboardCheck className="w-4 h-4 text-blue-600" /> 신규 기록 작성</div>
+                                        {saveError && <div className="p-4 bg-red-50 text-red-600 text-sm font-bold rounded-2xl border border-red-200 animate-pulse">⚠️ {saveError}</div>}
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div className="space-y-2"><label className="text-[11px] font-black text-slate-400 ml-1 uppercase">방문 일자</label><input type="date" value={meetingDate} onChange={(e) => setMeetingDate(e.target.value)} className="w-full p-4 bg-slate-50 border-2 border-transparent rounded-[1.5rem] text-sm font-bold focus:bg-white focus:border-blue-500 outline-none transition-all shadow-inner" /></div>
+                                            <div className="space-y-2"><label className="text-[11px] font-black text-slate-400 ml-1 uppercase">담당자 성함</label><input type="text" placeholder="담당자 성함" value={contactPerson} onChange={(e) => setContactPerson(e.target.value)} className="w-full p-4 bg-slate-50 border-2 border-transparent rounded-[1.5rem] text-sm font-bold focus:bg-white focus:border-blue-500 outline-none transition-all shadow-inner" /></div>
+                                            <div className="space-y-2 md:col-span-2"><label className="text-[11px] font-black text-slate-400 ml-1 uppercase">담당자 연락처</label><input type="tel" placeholder="010-0000-0000" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} className="w-full p-4 bg-slate-50 border-2 border-transparent rounded-[1.5rem] text-sm font-bold focus:bg-white focus:border-blue-500 outline-none transition-all shadow-inner" /></div>
+                                        </div>
+                                        <div className="space-y-2"><label className="text-[11px] font-black text-slate-400 ml-1 uppercase">상담 주요 내용</label><textarea placeholder="미팅 내용을 입력하세요..." rows="3" value={content} onChange={(e) => setContent(e.target.value)} className="w-full p-4 bg-slate-50 border-2 border-transparent rounded-[1.5rem] text-sm font-bold focus:bg-white focus:border-blue-500 outline-none transition-all shadow-inner resize-none"></textarea></div>
+                                        <button onClick={saveMeeting} disabled={!contactPerson || !content || isSaving} className={`w-full py-5 text-white rounded-[1.5rem] font-black transition-all flex items-center justify-center gap-3 shadow-xl active:scale-95 ${isSaving || !contactPerson || !content ? 'bg-slate-300 cursor-not-allowed grayscale' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-500/20'}`}>{isSaving ? '전송 중...' : '클라우드에 안전하게 저장'}</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
+
