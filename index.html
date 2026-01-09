@@ -23,14 +23,12 @@
 </head>
 <body class="flex h-screen overflow-hidden bg-white">
 
-    <!-- 사이드바 -->
     <aside class="w-64 border-r border-gray-100 flex flex-col">
         <div class="p-8"><h1 class="text-xl font-bold tracking-tighter italic">METIS</h1><p class="text-[9px] text-gray-400 tracking-widest uppercase mt-1">Strategic Network</p></div>
         <nav class="flex-1 overflow-y-auto px-4 space-y-1 no-scrollbar" id="brand-nav"></nav>
         <div class="p-4 border-t border-gray-50 text-[10px] text-gray-300 text-center uppercase tracking-widest font-bold italic">Private Network</div>
     </aside>
 
-    <!-- 메인 -->
     <main class="flex-1 flex flex-col">
         <header class="pt-10 px-10 border-b border-gray-50">
             <div class="flex justify-between items-end mb-6">
@@ -44,23 +42,17 @@
         </section>
     </main>
 
-    <!-- [Panel 1] 지점 편집 -->
     <div id="side-panel" class="fixed inset-y-0 right-0 w-[480px] bg-white shadow-2xl z-50 transform translate-x-full transition-transform duration-300 ease-in-out border-l border-gray-100 overflow-y-auto p-12">
-        <div class="flex justify-between items-center mb-10 text-gray-400">
-            <span id="panel-dealer-tag" class="text-[10px] font-bold bg-gray-100 px-3 py-1 rounded uppercase tracking-widest font-mono text-gray-500">DEALER</span>
-            <button onclick="window.closePanel()" class="text-3xl font-light hover:text-black">&times;</button>
-        </div>
+        <div class="flex justify-between items-center mb-10 text-gray-400"><span id="panel-dealer-tag" class="text-[10px] font-bold bg-gray-100 px-3 py-1 rounded uppercase tracking-widest font-mono text-gray-500">DEALER</span><button onclick="window.closePanel()" class="text-3xl font-light hover:text-black">&times;</button></div>
         <h3 id="panel-branch-title" class="text-3xl font-semibold mb-10 tracking-tight italic">지점명</h3>
         <div class="space-y-8">
             <div><label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Branch Manager</label><input type="text" id="in-mgr" placeholder="성함"></div>
             <div><label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Direct Contact</label><input type="text" id="in-tel" placeholder="연락처"></div>
             <div><label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Strategy Log</label><textarea id="in-notes" rows="10" placeholder="상담 내역"></textarea></div>
-            <!-- SAVE 버튼: 클릭 시 window.saveBranchData() 호출 -->
             <button onclick="window.saveBranchData()" class="w-full bg-[#171a20] text-white py-5 rounded-md font-semibold text-sm hover:bg-black transition shadow-xl uppercase tracking-widest">SAVE</button>
         </div>
     </div>
 
-    <!-- [Panel 2] 딜러사 본사 정보 -->
     <div id="dealer-panel" class="fixed inset-y-0 right-0 w-[500px] bg-[#f9f9f9] shadow-2xl z-[60] transform translate-x-full transition-transform duration-300 border-l border-gray-200 overflow-y-auto p-12">
         <div class="flex justify-between items-center mb-10 text-gray-400"><span class="text-[10px] font-bold bg-black text-white px-3 py-1 rounded uppercase tracking-widest">HQ Executive</span><button onclick="window.closeDealerPanel()" class="text-3xl font-light hover:text-black">&times;</button></div>
         <h3 id="dealer-panel-title" class="text-3xl font-semibold mb-10 tracking-tight italic">딜러사명</h3>
@@ -76,7 +68,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // 사용자 제공 고유 Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyCakAE_wHbzSNsBL7RKDUcouecxsxvdfvQ",
             authDomain: "metis-intelligence2.firebaseapp.com",
@@ -92,7 +83,6 @@
         let CLOUD_DATA = {};
         let DEALER_CLOUD_DATA = {};
 
-        // 23개 전 브랜드 및 유통망 정보 (그대로 유지)
         const DATA_MAP = {
             "Mercedes-Benz": { "한성자동차": ["강남본점", "청담", "삼성", "서초", "방배", "분당", "인천", "부산", "대전"], "효성자동차": ["강북", "서대문", "안양", "광주", "포항", "울산"], "KCC오토": ["금천", "영등포", "한남", "부천"], "모터원": ["일산", "파주", "의정부"], "경성모터스": ["강서", "화곡"], "스타자동차": ["해운대", "울산"] },
             "BMW": { "코오롱모터스": ["강남", "삼성", "분당", "광주", "대구", "부산", "대전"], "도이치모터스": ["성수", "양재", "한남", "미사", "수원", "원주"], "한독모터스": ["용산", "서초", "방배", "상무", "수원"], "바바리안모터스": ["송도", "일산", "목동", "인천", "계양"], "삼천리모터스": ["천안", "청주", "안양"] },
@@ -121,19 +111,11 @@
 
         let currentBrand = "", currentDealer = "", activeBranchKey = "";
 
-        // 실시간 동기화 (지점)
         onSnapshot(doc(db, "metis", "branches"), (snapshot) => {
-            if (snapshot.exists()) {
-                CLOUD_DATA = snapshot.data();
-                renderBranches(); 
-            }
+            if (snapshot.exists()) { CLOUD_DATA = snapshot.data(); renderBranches(); }
         });
-        
-        // 실시간 동기화 (딜러사 본사)
         onSnapshot(doc(db, "metis", "dealers"), (snapshot) => {
-            if (snapshot.exists()) {
-                DEALER_CLOUD_DATA = snapshot.data();
-            }
+            if (snapshot.exists()) { DEALER_CLOUD_DATA = snapshot.data(); }
         });
 
         const brandNav = document.getElementById('brand-nav');
@@ -149,7 +131,7 @@
         function selectBrand(brand, el) {
             currentBrand = brand;
             document.querySelectorAll('.sidebar-brand').forEach(b => b.classList.remove('active'));
-            el.classList.add('active');
+            if(el) el.classList.add('active');
             document.getElementById('current-brand').innerText = brand;
             const dealerTabs = document.getElementById('dealer-tabs');
             dealerTabs.innerHTML = "";
@@ -166,7 +148,7 @@
         function selectDealer(dealer, el) {
             currentDealer = dealer;
             document.querySelectorAll('.dealer-tab').forEach(t => t.classList.remove('active'));
-            el.classList.add('active');
+            if(el) el.classList.add('active');
             renderBranches();
         }
 
@@ -179,7 +161,6 @@
             DATA_MAP[currentBrand][currentDealer].forEach(branch => {
                 const key = `${currentBrand}_${currentDealer}_${branch}`;
                 const savedData = CLOUD_DATA[key] || { mgr: "미기입", tel: "미기입" };
-                
                 const card = document.createElement('div');
                 card.className = "branch-card p-8 cursor-pointer";
                 card.onclick = () => window.openPanel(branch);
@@ -200,26 +181,17 @@
             });
         }
 
-        // --- 전역 함수 등록 (window 객체에 직접 연결하여 버튼 작동 보장) ---
-        
         window.openPanel = (branch) => {
             activeBranchKey = `${currentBrand}_${currentDealer}_${branch}`;
             document.getElementById('panel-dealer-tag').innerText = currentDealer;
             document.getElementById('panel-branch-title').innerText = branch;
             const data = CLOUD_DATA[activeBranchKey] || { mgr: "", tel: "", notes: "" };
-            
-            // 입력칸에 기존 데이터 채우기 (미기입인 경우 빈칸으로)
             document.getElementById('in-mgr').value = data.mgr === "미기입" ? "" : data.mgr;
             document.getElementById('in-tel').value = data.tel === "미기입" ? "" : data.tel;
             document.getElementById('in-notes').value = data.notes || "";
-            
             document.getElementById('side-panel').classList.remove('translate-x-full');
         };
-
-        window.closePanel = () => {
-            document.getElementById('side-panel').classList.add('translate-x-full');
-        };
-
+        window.closePanel = () => document.getElementById('side-panel').classList.add('translate-x-full');
         window.openDealerPanel = () => {
             document.getElementById('dealer-panel-title').innerText = currentDealer;
             const data = DEALER_CLOUD_DATA[`${currentBrand}_${currentDealer}`] || { ceo: "", vp: "", memo: "" };
@@ -228,44 +200,32 @@
             document.getElementById('dealer-memo').value = data.memo;
             document.getElementById('dealer-panel').classList.remove('translate-x-full');
         };
+        window.closeDealerPanel = () => document.getElementById('dealer-panel').classList.add('translate-x-full');
 
-        window.closeDealerPanel = () => {
-            document.getElementById('dealer-panel').classList.add('translate-x-full');
-        };
-
-        // [핵심] SAVE 지점 정보: 저장 -> 카드 반영 -> 창 닫기
+        // SAVE 기능: 성공 시 창을 닫도록 보강
         window.saveBranchData = async () => {
             const mgr = document.getElementById('in-mgr').value || "미기입";
             const tel = document.getElementById('in-tel').value || "미기입";
-            const notes = document.getElementById('in-notes').value;
+            const notes = document.getElementById('in-notes').value || "";
             
-            // 1. 내부 데이터 업데이트
             CLOUD_DATA[activeBranchKey] = { mgr, tel, notes };
             
             try {
-                // 2. 파이어베이스에 즉시 저장
                 await setDoc(doc(db, "metis", "branches"), CLOUD_DATA);
-                
-                // 3. 카드 외부 정보는 onSnapshot이 감지해서 즉시 바뀜
-                
-                // 4. 정보 입력칸 닫기
-                window.closePanel();
-                
+                window.closePanel(); // 성공하면 즉시 창 닫기
             } catch (e) {
                 console.error("Save error: ", e);
                 alert("저장에 실패했습니다. Firebase 규칙을 확인해주세요.");
             }
         };
 
-        // SAVE 딜러 본사 정보
         window.saveDealerData = async () => {
             const key = `${currentBrand}_${currentDealer}`;
             DEALER_CLOUD_DATA[key] = {
-                ceo: document.getElementById('dealer-ceo').value,
-                vp: document.getElementById('dealer-vp').value,
-                memo: document.getElementById('dealer-memo').value
+                ceo: document.getElementById('dealer-ceo').value || "",
+                vp: document.getElementById('dealer-vp').value || "",
+                memo: document.getElementById('dealer-memo').value || ""
             };
-            
             try {
                 await setDoc(doc(db, "metis", "dealers"), DEALER_CLOUD_DATA);
                 window.closeDealerPanel();
@@ -273,7 +233,6 @@
                 console.error("Save error: ", e);
             }
         };
-
     </script>
 </body>
 </html>
