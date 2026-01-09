@@ -1,130 +1,141 @@
-import React, { useState } from 'react';
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>METIS INTELLIGENCE</title>
+    <!-- Tailwind CSS & Fonts -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@200;400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #050505;
+            color: #ffffff;
+            font-family: 'Noto Serif KR', serif;
+        }
+        .gold-text { color: #D4AF37; }
+        .gold-border { border-color: rgba(212, 175, 55, 0.3); }
+        .glass-card {
+            background: rgba(15, 15, 15, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .maybach-gradient {
+            background: linear-gradient(145deg, #121212, #050505);
+        }
+        /* 마이바흐 다이아몬드 퀼팅 느낌의 미세한 배경 */
+        .quilting {
+            background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 0L40 20L20 40L0 20Z' fill='%23ffffff' fill-opacity='0.02'/%3E%3C/svg%3E");
+        }
+    </style>
+</head>
+<body class="quilting">
 
-// --- 가상 데이터 (나중에 엑셀 업로드로 대체될 부분) ---
-const DATA = [
-  {
-    id: 'mb',
-    name: 'Mercedes-Benz',
-    dealers: [
-      {
-        name: '한성자동차',
-        executive: '홍길동 대표이사',
-        ex_info: '전략적 핵심 파트너, 마이바흐 라운지 리뉴얼 주도',
-        branches: [
-          { name: '강남 전시장', manager: '이몽룡 지점장', contact: '02-123-4567', note: '본사 직영급 관리 지점' },
-          { name: '청담 전시장', manager: '성춘향 지점장', contact: '02-555-7777', note: 'VIP 전용 상담 센터' }
-        ]
-      },
-      {
-        name: '효성자동차',
-        executive: '김철수 부사장',
-        ex_info: '실무 결정권자, 서비스 센터 확장 중심 전략',
-        branches: [
-          { name: '서초 전시장', manager: '박문수 지점장', contact: '02-999-0000', note: '재고 물량 다수 보유' }
-        ]
-      }
-    ]
-  },
-  { id: 'bmw', name: 'BMW', dealers: [] }
-];
+    <!-- Header -->
+    <header class="p-10 border-b border-white/5 flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-extralight tracking-[0.4em] gold-text">METIS</h1>
+            <p class="text-[10px] tracking-[0.5em] text-white/30 mt-2 uppercase">Intelligence Network System</p>
+        </div>
+        <div class="hidden md:block text-right">
+            <p class="text-[10px] text-white/20 tracking-tighter">FOR EXECUTIVE DECISION ONLY</p>
+            <p class="text-xs gold-text opacity-70">CONFIDENTIAL</p>
+        </div>
+    </header>
 
-export default function MetisApp() {
-  const [selectedBrand, setSelectedBrand] = useState(null);
-  const [selectedDealer, setSelectedDealer] = useState(null);
-
-  return (
-    <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-gold-500">
-      {/* Header */}
-      <header className="p-8 border-b border-white/10 flex justify-between items-center">
-        <h1 className="text-2xl font-extralight tracking-[0.3em] text-[#D4AF37]">METIS INTELLIGENCE</h1>
-        <div className="text-xs text-white/40 tracking-widest">EXECUTIVE NETWORK SYSTEM</div>
-      </header>
-
-      <main className="p-8 max-w-7xl mx-auto">
-        {/* 1단계: 브랜드 선택 */}
-        <section className="mb-12">
-          <h2 className="text-sm uppercase tracking-tighter text-[#D4AF37] mb-6 opacity-80">Select Brand</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {DATA.map((brand) => (
-              <button
-                key={brand.id}
-                onClick={() => { setSelectedBrand(brand); setSelectedDealer(null); }}
-                className={`h-32 border transition-all duration-500 rounded-sm flex items-center justify-center text-xl font-light
-                ${selectedBrand?.id === brand.id ? 'border-[#D4AF37] bg-[#D4AF37]/5 shadow-[0_0_20px_rgba(212,175,55,0.2)]' : 'border-white/10 hover:border-white/30'}`}
-              >
-                {brand.name}
-              </button>
-            ))}
-          </div>
+    <main class="max-w-7xl mx-auto p-10">
+        <!-- 1단계: 브랜드 선택 (현재는 벤츠 중심) -->
+        <section class="mb-16">
+            <h2 class="text-xs gold-text tracking-widest uppercase mb-8 opacity-60">Strategic Brands</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="maybach-gradient p-8 border gold-border rounded-sm shadow-2xl cursor-pointer hover:scale-[1.02] transition-transform">
+                    <p class="text-2xl font-light mb-1">Mercedes-Benz</p>
+                    <p class="text-[10px] text-[#D4AF37] tracking-widest">MAYBACH DIVISION</p>
+                </div>
+                <div class="bg-black/40 p-8 border border-white/5 rounded-sm opacity-40">
+                    <p class="text-2xl font-light mb-1">BMW</p>
+                    <p class="text-[10px] tracking-widest">ALPINA SERIES</p>
+                </div>
+                <div class="bg-black/40 p-8 border border-white/5 rounded-sm opacity-40">
+                    <p class="text-2xl font-light mb-1">Porsche</p>
+                    <p class="text-[10px] tracking-widest">EXCLUSIVE MANUFAKTUR</p>
+                </div>
+            </div>
         </section>
 
-        {selectedBrand && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            {/* 2단계: 딜러사 및 결정권자 정보 */}
-            <section>
-              <h2 className="text-sm uppercase tracking-tighter text-[#D4AF37] mb-6 opacity-80">Dealer Group & C-Level</h2>
-              <div className="space-y-4">
-                {selectedBrand.dealers.map((dealer) => (
-                  <div 
-                    key={dealer.name}
-                    onClick={() => setSelectedDealer(dealer)}
-                    className={`p-6 border cursor-pointer transition-all duration-300 rounded-sm
-                    ${selectedDealer?.name === dealer.name ? 'border-[#D4AF37] bg-[#111]' : 'border-white/5 bg-[#0A0A0A] hover:border-white/20'}`}
-                  >
-                    <div className="flex justify-between items-start mb-4">
-                      <h3 className="text-xl font-light">{dealer.name}</h3>
-                      <span className="text-[10px] px-2 py-1 border border-[#D4AF37]/50 text-[#D4AF37]">OFFICIAL</span>
+        <!-- 2&3단계: 딜러사 및 결정권자 / 지점 정보 -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+            
+            <!-- 딜러사 및 결정권자 정보 -->
+            <div class="lg:col-span-5 space-y-8">
+                <h2 class="text-xs gold-text tracking-widest uppercase opacity-60">Dealer Groups & C-Level</h2>
+                
+                <!-- 딜러사 카드 1 -->
+                <div class="glass-card p-8 rounded-sm border-l-2 border-l-[#D4AF37]">
+                    <div class="flex justify-between items-start mb-6">
+                        <h3 class="text-2xl font-normal">한성자동차</h3>
+                        <span class="text-[9px] gold-text border border-[#D4AF37]/30 px-2 py-1">VVIP PARTNER</span>
                     </div>
-                    <div className="space-y-1">
-                      <p className="text-[#D4AF37] font-medium">{dealer.executive}</p>
-                      <p className="text-xs text-white/50 leading-relaxed">{dealer.ex_info}</p>
+                    <div class="space-y-4">
+                        <div class="bg-white/5 p-4 rounded-sm">
+                            <p class="text-[10px] text-white/40 uppercase mb-1">Decision Maker</p>
+                            <p class="text-xl gold-text font-medium">홍길동 대표이사</p>
+                            <p class="text-xs text-white/60 mt-2 leading-relaxed italic">"메티스 유통망 확장의 핵심 결정권자. 마이바흐 전용 라운지 도입 프로젝트 주도 중."</p>
+                        </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            </section>
+                </div>
 
-            {/* 3단계: 지점 상세 및 메모 */}
-            <section>
-              <h2 className="text-sm uppercase tracking-tighter text-[#D4AF37] mb-6 opacity-80">Branch Details</h2>
-              {selectedDealer ? (
-                <div className="space-y-6">
-                  {selectedDealer.branches.map((branch) => (
-                    <div key={branch.name} className="p-6 bg-[#0A0A0A] border border-white/5 rounded-sm shadow-xl">
-                      <div className="flex justify-between items-center mb-4">
-                        <h4 className="text-lg font-light">{branch.name}</h4>
-                        <a href={`tel:${branch.contact}`} className="text-xs text-[#D4AF37] hover:underline">{branch.contact}</a>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4 mb-6">
-                        <div>
-                          <p className="text-[10px] text-white/30 uppercase">Manager</p>
-                          <p className="text-sm">{branch.manager}</p>
-                        </div>
-                        <div>
-                          <p className="text-[10px] text-white/30 uppercase">Status</p>
-                          <p className="text-sm text-green-500">Active</p>
-                        </div>
-                      </div>
-                      <div>
-                        <p className="text-[10px] text-white/30 uppercase mb-2">Intelligence Note</p>
-                        <textarea 
-                          className="w-full bg-black/50 border border-white/10 p-3 text-sm text-white/70 focus:border-[#D4AF37] outline-none h-24 resize-none"
-                          placeholder="상담 내용을 입력하세요..."
-                          defaultValue={branch.note}
-                        />
-                      </div>
+                <!-- 딜러사 카드 2 -->
+                <div class="glass-card p-8 rounded-sm border-l-2 border-l-white/10 opacity-70">
+                    <div class="flex justify-between items-start mb-6">
+                        <h3 class="text-2xl font-normal">효성자동차</h3>
+                        <span class="text-[9px] text-white/30 border border-white/10 px-2 py-1">ACTIVE</span>
                     </div>
-                  ))}
+                    <div class="bg-white/5 p-4 rounded-sm">
+                        <p class="text-[10px] text-white/40 uppercase mb-1">Decision Maker</p>
+                        <p class="text-xl text-white/80 font-medium">김철수 본부장</p>
+                    </div>
                 </div>
-              ) : (
-                <div className="h-64 flex items-center justify-center border border-dashed border-white/10 text-white/20 text-sm">
-                  딜러사를 선택하면 지점 정보가 표시됩니다.
+            </div>
+
+            <!-- 지점 상세 및 메모 -->
+            <div class="lg:col-span-7 space-y-8">
+                <h2 class="text-xs gold-text tracking-widest uppercase opacity-60">Branch Intelligence</h2>
+                
+                <div class="space-y-6">
+                    <!-- 지점 1 -->
+                    <div class="glass-card p-8 rounded-sm">
+                        <div class="flex justify-between items-center mb-8">
+                            <h4 class="text-xl font-light">청담 전시장 (마이바흐 센터)</h4>
+                            <button class="text-[10px] gold-text tracking-widest border-b border-[#D4AF37] pb-1">CONTACT OFFICE</button>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-8 mb-8">
+                            <div>
+                                <p class="text-[10px] text-white/30 uppercase mb-2">Branch Manager</p>
+                                <p class="text-lg">성춘향 지점장</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] text-white/30 uppercase mb-2">Contact</p>
+                                <p class="text-lg">02-555-7777</p>
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <p class="text-[10px] text-white/30 uppercase mb-3">Intelligence Log</p>
+                            <div class="w-full bg-black/40 border border-white/10 p-5 text-sm text-white/60 leading-relaxed min-h-[100px] font-light">
+                                사장님 보고 사항: 해당 지점은 다음 달 벤츠 독일 본사 실사 예정임. 유통망 선점 시급. 담당 지점장 성향 파악 완료 (데이터 기반 제안 선호).
+                            </div>
+                        </div>
+                    </div>
                 </div>
-              )}
-            </section>
-          </div>
-        )}
-      </main>
-    </div>
-  );
-}
+            </div>
+        </div>
+    </main>
+
+    <footer class="p-20 text-center opacity-20">
+        <p class="text-[10px] tracking-[0.8em]">METIS CORPORATE INTELLIGENCE &copy; 2024</p>
+    </footer>
+
+</body>
+</html>
