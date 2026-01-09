@@ -34,8 +34,8 @@
     <main class="flex-1 flex flex-col">
         <header class="pt-10 px-10 border-b border-gray-50">
             <div class="flex justify-between items-end mb-6">
-                <div><h2 id="current-brand" class="text-3xl font-semibold tracking-tight uppercase">Brand</h2><p class="text-xs text-gray-400 mt-1 uppercase italic tracking-wider">Executive Intelligence System</p></div>
-                <button onclick="window.openDealerPanel()" class="text-[11px] font-bold bg-[#171a20] text-white px-8 py-2.5 rounded-full hover:bg-black transition uppercase tracking-widest">딜러사 본사 정보</button>
+                <div><h2 id="current-brand" class="text-3xl font-semibold tracking-tight uppercase text-gray-900">Brand</h2><p class="text-xs text-gray-400 mt-1 uppercase italic tracking-wider">Executive Intelligence System</p></div>
+                <button onclick="window.openDealerPanel()" class="text-[11px] font-bold bg-[#171a20] text-white px-8 py-2.5 rounded-full hover:bg-black transition uppercase tracking-widest shadow-lg">딜러사 본사 정보</button>
             </div>
             <div class="flex space-x-8 overflow-x-auto no-scrollbar" id="dealer-tabs"></div>
         </header>
@@ -49,10 +49,10 @@
         <div class="flex justify-between items-center mb-10 text-gray-400"><span id="panel-dealer-tag" class="text-[10px] font-bold bg-gray-100 px-3 py-1 rounded uppercase tracking-widest font-mono text-gray-500">DEALER</span><button onclick="window.closePanel()" class="text-3xl font-light hover:text-black">&times;</button></div>
         <h3 id="panel-branch-title" class="text-3xl font-semibold mb-10 tracking-tight italic">지점명</h3>
         <div class="space-y-8">
-            <div><label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Branch Manager</label><input type="text" id="in-mgr"></div>
-            <div><label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Direct Contact</label><input type="text" id="in-tel"></div>
-            <div><label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Strategy Log</label><textarea id="in-notes" rows="10"></textarea></div>
-            <button id="btn-save-branch" class="w-full bg-[#171a20] text-white py-5 rounded-md font-semibold text-sm hover:bg-black transition shadow-xl uppercase tracking-widest">SAVE</button>
+            <div><label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Branch Manager</label><input type="text" id="in-mgr" placeholder="성함"></div>
+            <div><label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Direct Contact</label><input type="text" id="in-tel" placeholder="연락처"></div>
+            <div><label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Strategy Log</label><textarea id="in-notes" rows="10" placeholder="상담 내역"></textarea></div>
+            <button onclick="window.saveBranchData()" class="w-full bg-[#171a20] text-white py-5 rounded-md font-semibold text-sm hover:bg-black transition shadow-xl uppercase tracking-widest">SAVE</button>
         </div>
     </div>
 
@@ -60,11 +60,11 @@
     <div id="dealer-panel" class="fixed inset-y-0 right-0 w-[500px] bg-[#f9f9f9] shadow-2xl z-[60] transform translate-x-full transition-transform duration-300 border-l border-gray-200 overflow-y-auto p-12">
         <div class="flex justify-between items-center mb-10 text-gray-400"><span class="text-[10px] font-bold bg-black text-white px-3 py-1 rounded uppercase tracking-widest">HQ Executive</span><button onclick="window.closeDealerPanel()" class="text-3xl font-light hover:text-black">&times;</button></div>
         <h3 id="dealer-panel-title" class="text-3xl font-semibold mb-10 tracking-tight italic">딜러사명</h3>
-        <div class="space-y-8 bg-white p-8 rounded-xl border border-gray-100 shadow-sm">
-            <div><label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">CEO</label><input type="text" id="dealer-ceo"></div>
-            <div><label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Sales Director</label><input type="text" id="dealer-vp"></div>
-            <div><label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Note</label><textarea id="dealer-memo" rows="6"></textarea></div>
-            <button id="btn-save-dealer" class="w-full bg-[#171a20] text-white py-5 rounded-md font-semibold text-sm hover:bg-black transition uppercase tracking-widest shadow-xl">SAVE</button>
+        <div class="space-y-8 bg-white p-8 rounded-xl border border-gray-100">
+            <div><label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">CEO</label><input type="text" id="dealer-ceo" placeholder="대표이사"></div>
+            <div><label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Sales Director</label><input type="text" id="dealer-vp" placeholder="본부장"></div>
+            <div><label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Note</label><textarea id="dealer-memo" rows="6" placeholder="특이사항"></textarea></div>
+            <button onclick="window.saveDealerData()" class="w-full bg-[#171a20] text-white py-5 rounded-md font-semibold text-sm hover:bg-black transition uppercase tracking-widest shadow-xl">SAVE</button>
         </div>
     </div>
 
@@ -72,6 +72,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+        // 파이어베이스 설정 (사용자 정보 고정)
         const firebaseConfig = {
             apiKey: "AIzaSyCakAE_wHbzSNsBL7RKDUcouecxsxvdfvQ",
             authDomain: "metis-intelligence2.firebaseapp.com",
@@ -87,6 +88,7 @@
         let CLOUD_DATA = {};
         let DEALER_CLOUD_DATA = {};
 
+        // 23개 전 브랜드 및 유통망 정보 (그대로 유지)
         const DATA_MAP = {
             "Mercedes-Benz": { "한성자동차": ["강남본점", "청담", "삼성", "서초", "방배", "분당", "인천", "부산", "대전"], "효성자동차": ["강북", "서대문", "안양", "광주", "포항", "울산"], "KCC오토": ["금천", "영등포", "한남", "부천"], "모터원": ["일산", "파주", "의정부"], "경성모터스": ["강서", "화곡"], "스타자동차": ["해운대", "울산"] },
             "BMW": { "코오롱모터스": ["강남", "삼성", "분당", "광주", "대구", "부산", "대전"], "도이치모터스": ["성수", "양재", "한남", "미사", "수원", "원주"], "한독모터스": ["용산", "서초", "방배", "상무", "수원"], "바바리안모터스": ["송도", "일산", "목동", "인천", "계양"], "삼천리모터스": ["천안", "청주", "안양"] },
@@ -115,7 +117,7 @@
 
         let currentBrand = "", currentDealer = "", activeBranchKey = "";
 
-        // 실시간 수신 및 렌더링
+        // 실시간 동기화
         onSnapshot(doc(db, "metis", "branches"), (snapshot) => {
             if (snapshot.exists()) { CLOUD_DATA = snapshot.data(); renderBranches(); }
         });
@@ -123,7 +125,8 @@
             if (snapshot.exists()) { DEALER_CLOUD_DATA = snapshot.data(); }
         });
 
-        function renderBrands() {
+        // 사이드바 렌더링
+        function initBrandNav() {
             const nav = document.getElementById('brand-nav');
             nav.innerHTML = "";
             Object.keys(DATA_MAP).forEach((brand, idx) => {
@@ -132,7 +135,7 @@
                 btn.innerText = brand;
                 btn.onclick = () => selectBrand(brand, btn);
                 nav.appendChild(btn);
-                if(idx === 0 && !currentBrand) selectBrand(brand, btn);
+                if(idx === 0) selectBrand(brand, btn);
             });
         }
 
@@ -189,7 +192,8 @@
             });
         }
 
-        // 패널 열기/닫기 전역 설정
+        // --- 전역 함수 등록 (window 객체에 연결하여 버튼 작동 보장) ---
+        
         window.openPanel = (branch) => {
             activeBranchKey = `${currentBrand}_${currentDealer}_${branch}`;
             document.getElementById('panel-dealer-tag').innerText = currentDealer;
@@ -200,7 +204,11 @@
             document.getElementById('in-notes').value = data.notes || "";
             document.getElementById('side-panel').classList.remove('translate-x-full');
         };
-        window.closePanel = () => document.getElementById('side-panel').classList.add('translate-x-full');
+
+        window.closePanel = () => {
+            document.getElementById('side-panel').classList.add('translate-x-full');
+        };
+
         window.openDealerPanel = () => {
             document.getElementById('dealer-panel-title').innerText = currentDealer;
             const data = DEALER_CLOUD_DATA[`${currentBrand}_${currentDealer}`] || { ceo: "", vp: "", memo: "" };
@@ -209,31 +217,48 @@
             document.getElementById('dealer-memo').value = data.memo;
             document.getElementById('dealer-panel').classList.remove('translate-x-full');
         };
-        window.closeDealerPanel = () => document.getElementById('dealer-panel').classList.add('translate-x-full');
 
-        // SAVE 버튼 이벤트 리스너 등록
-        document.getElementById('btn-save-branch').addEventListener('click', async () => {
+        window.closeDealerPanel = () => {
+            document.getElementById('dealer-panel').classList.add('translate-x-full');
+        };
+
+        // SAVE 지점 정보
+        window.saveBranchData = async () => {
             const mgr = document.getElementById('in-mgr').value || "미기입";
             const tel = document.getElementById('in-tel').value || "미기입";
             const notes = document.getElementById('in-notes').value;
+            
             CLOUD_DATA[activeBranchKey] = { mgr, tel, notes };
-            await setDoc(doc(db, "metis", "branches"), CLOUD_DATA);
-            window.closePanel();
-        });
+            
+            try {
+                await setDoc(doc(db, "metis", "branches"), CLOUD_DATA);
+                window.closePanel(); // 저장 완료 시 창 닫기
+            } catch (e) {
+                console.error("Save error: ", e);
+                alert("저장 실패. 파이어베이스 규칙을 확인하세요.");
+            }
+        };
 
-        document.getElementById('btn-save-dealer').addEventListener('click', async () => {
+        // SAVE 딜러 본사 정보
+        window.saveDealerData = async () => {
             const key = `${currentBrand}_${currentDealer}`;
             DEALER_CLOUD_DATA[key] = {
                 ceo: document.getElementById('dealer-ceo').value,
                 vp: document.getElementById('dealer-vp').value,
                 memo: document.getElementById('dealer-memo').value
             };
-            await setDoc(doc(db, "metis", "dealers"), DEALER_CLOUD_DATA);
-            window.closeDealerPanel();
-        });
+            
+            try {
+                await setDoc(doc(db, "metis", "dealers"), DEALER_CLOUD_DATA);
+                window.closeDealerPanel(); // 저장 완료 시 창 닫기
+            } catch (e) {
+                console.error("Save error: ", e);
+            }
+        };
 
         // 초기 실행
-        renderBrands();
+        initBrandNav();
+
     </script>
 </body>
 </html>
