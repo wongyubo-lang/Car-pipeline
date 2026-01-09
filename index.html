@@ -3,215 +3,221 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>METIS | Intelligence Dashboard</title>
+    <title>METIS | Intelligence Control</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-family: 'Inter', -apple-system, sans-serif;
+            background-color: #ffffff;
+            color: #171a20;
+        }
+        .sidebar-item {
+            transition: all 0.2s;
+            color: #393c41;
+        }
+        .sidebar-item:hover {
             background-color: #f4f4f4;
-            color: #171a20; /* 테슬라 고유 블랙 */
+            color: #000;
         }
-        .tesla-card {
-            background: #ffffff;
-            border-radius: 8px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 1px solid #e2e2e2;
+        .sidebar-item.active {
+            font-weight: 600;
+            color: #000;
+            background-color: #eeeeee;
         }
-        .tesla-card:hover {
+        input, textarea {
+            border: 1px solid #d0d1d2;
+            border-radius: 4px;
+            padding: 10px 14px;
+            width: 100%;
+            transition: border-color 0.2s;
+            background-color: #f9f9f9;
+        }
+        input:focus, textarea:focus {
+            border-color: #3d3e40;
+            outline: none;
+            background-color: #fff;
+        }
+        .branch-card {
+            border: 1px solid #eee;
+            border-radius: 12px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .branch-card:hover {
+            transform: translateY(-2px);
             box-shadow: 0 10px 20px rgba(0,0,0,0.05);
-            border-color: #d0d0d0;
         }
-        .btn-tesla {
-            background-color: #3d3e40;
-            color: white;
-            transition: background 0.2s;
-        }
-        .btn-tesla:hover {
-            background-color: #171a20;
-        }
-        .accent-red { color: #e82127; } /* 테슬라 레드 */
-        .sidebar { background: #ffffff; border-right: 1px solid #e2e2e2; }
-        /* 가로 스크롤바 숨기기 */
-        .no-scrollbar::-webkit-scrollbar { display: none; }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: #e2e2e2; border-radius: 10px; }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden">
 
-    <!-- Sidebar: Brand Navigation -->
-    <aside class="w-64 sidebar flex-shrink-0 flex flex-col">
-        <div class="p-6 border-b border-gray-100">
-            <h1 class="text-xl font-semibold tracking-tighter italic">METIS</h1>
-            <p class="text-[10px] text-gray-400 tracking-widest uppercase mt-1">Network Intel</p>
+    <!-- Sidebar: All Brands -->
+    <aside class="w-72 bg-white border-right border-gray-200 flex flex-col border-r">
+        <div class="p-8">
+            <h1 class="text-2xl font-bold tracking-tighter uppercase italic">METIS</h1>
+            <p class="text-[10px] text-gray-400 tracking-[0.3em] uppercase mt-1 font-medium">Network Intelligence</p>
         </div>
-        <nav class="flex-1 overflow-y-auto p-4 space-y-1 no-scrollbar">
-            <p class="text-[10px] font-bold text-gray-400 uppercase px-3 mb-2">Major Brands</p>
-            <button onclick="filterBrand('Mercedes-Benz')" class="w-full text-left px-3 py-2 rounded-md hover:bg-gray-100 text-sm">Mercedes-Benz</button>
-            <button onclick="filterBrand('BMW')" class="w-full text-left px-3 py-2 rounded-md hover:bg-gray-100 text-sm">BMW</button>
-            <button onclick="filterBrand('Audi')" class="w-full text-left px-3 py-2 rounded-md hover:bg-gray-100 text-sm">Audi</button>
-            <button onclick="filterBrand('Tesla')" class="w-full text-left px-3 py-2 rounded-md hover:bg-gray-100 text-sm font-semibold accent-red">Tesla Korea</button>
-            <button onclick="filterBrand('Volvo')" class="w-full text-left px-3 py-2 rounded-md hover:bg-gray-100 text-sm">Volvo</button>
-            <button onclick="filterBrand('Porsche')" class="w-full text-left px-3 py-2 rounded-md hover:bg-gray-100 text-sm">Porsche</button>
-            <button onclick="filterBrand('Lexus')" class="w-full text-left px-3 py-2 rounded-md hover:bg-gray-100 text-sm">Lexus</button>
-            <div class="pt-4">
-                <p class="text-[10px] font-bold text-gray-400 uppercase px-3 mb-2">Others</p>
-                <button class="w-full text-left px-3 py-2 rounded-md hover:bg-gray-100 text-xs text-gray-500">Volkswagen, Land Rover, Jeep...</button>
-            </div>
-        </nav>
-        <div class="p-4 border-t border-gray-100 text-[10px] text-gray-300">
-            &copy; 2026 METIS STRATEGY
+        
+        <div class="flex-1 overflow-y-auto px-4 pb-10 space-y-1" id="brand-nav">
+            <!-- JS에서 브랜드 리스트 생성 -->
+        </div>
+
+        <div class="p-6 border-t border-gray-100 text-[10px] text-gray-400 text-center">
+            PRIVATE & CONFIDENTIAL | 2026
         </div>
     </aside>
 
-    <!-- Main Content -->
-    <main class="flex-1 flex flex-col overflow-hidden bg-[#f9f9f9]">
-        <!-- Top Bar -->
-        <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8">
-            <div class="flex items-center space-x-4">
-                <span id="current-view" class="font-medium text-gray-800 uppercase tracking-tight">전체 유통망 현황</span>
-            </div>
-            <div class="flex space-x-4">
-                <input type="text" placeholder="지점명 또는 결정권자 검색..." class="text-sm border border-gray-200 rounded-full px-4 py-1.5 w-64 focus:outline-none focus:border-gray-400">
-                <button class="text-xs font-semibold px-4 py-2 border border-gray-800 rounded-full hover:bg-gray-800 hover:text-white transition">REPORT EXPORT</button>
+    <!-- Main Section -->
+    <main class="flex-1 flex flex-col bg-white">
+        <header class="h-20 flex items-center justify-between px-10 border-b border-gray-50">
+            <h2 id="brand-title" class="text-xl font-medium tracking-tight uppercase">전체 네트워크</h2>
+            <div class="flex items-center space-x-6">
+                <div class="relative">
+                    <input type="text" placeholder="검색..." class="w-64 rounded-full bg-gray-100 border-none text-sm py-2 px-5">
+                </div>
+                <button class="bg-[#171a20] text-white px-6 py-2 rounded-full text-xs font-medium hover:bg-black transition">DATA EXPORT</button>
             </div>
         </header>
 
-        <!-- Dashboard Content -->
-        <section class="flex-1 overflow-y-auto p-8" id="content-area">
-            <!-- Brand Overview Grid (Default) -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="dealer-grid">
-                <!-- 데이터 로드 영역 -->
+        <section class="flex-1 overflow-y-auto p-10">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="branch-grid">
+                <!-- 선택된 브랜드의 지점 카드 로드 -->
             </div>
         </section>
     </main>
 
-    <!-- Detail Modal (Slide Over) -->
-    <div id="detail-modal" class="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 hidden flex justify-end">
-        <div class="w-full max-w-lg bg-white h-full shadow-2xl p-8 overflow-y-auto transform transition-transform duration-500 translate-x-full" id="modal-panel">
-            <div class="flex justify-between items-start mb-8">
-                <div>
-                    <h2 id="modal-title" class="text-2xl font-semibold tracking-tight">지점 정보</h2>
-                    <p id="modal-subtitle" class="text-sm text-gray-400">딜러사 상세 정보</p>
-                </div>
-                <button onclick="closeModal()" class="text-gray-400 hover:text-black text-2xl">&times;</button>
+    <!-- Detail Side Panel (Tesla Style Modal) -->
+    <div id="side-panel" class="fixed inset-y-0 right-0 w-[450px] bg-white shadow-2xl z-50 transform translate-x-full transition-transform duration-300 border-l border-gray-100 overflow-y-auto">
+        <div class="p-10">
+            <div class="flex justify-between items-center mb-10">
+                <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Editor</span>
+                <button onclick="closePanel()" class="text-3xl font-light">&times;</button>
             </div>
 
-            <div class="space-y-8 text-sm">
-                <!-- 결정권자 섹션 (사장님 보고 핵심) -->
-                <div class="bg-gray-50 p-6 rounded-lg border border-gray-100">
-                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-4">C-Level Decision Maker</label>
-                    <div class="space-y-4">
-                        <div>
-                            <p class="text-xs text-gray-500 mb-1">성함 및 직함</p>
-                            <input type="text" id="exec-name" placeholder="예: 홍길동 본부장" class="w-full bg-transparent border-b border-gray-300 focus:border-black outline-none py-1 text-base font-medium">
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-500 mb-1">핵심 성향 / 관계</p>
-                            <input type="text" id="exec-meta" placeholder="예: 공격적 확장 선호, 우리 제품 우호적" class="w-full bg-transparent border-b border-gray-300 focus:border-black outline-none py-1">
-                        </div>
-                    </div>
-                </div>
+            <h3 id="edit-branch-name" class="text-2xl font-semibold mb-2 tracking-tight">지점명</h3>
+            <p id="edit-dealer-name" class="text-gray-400 text-sm mb-10 font-light">딜러사 정보</p>
 
-                <!-- 지점 세부 정보 -->
+            <div class="space-y-8">
+                <!-- Editable Fields -->
                 <div>
-                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-4">Branch Infrastructure</label>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="p-4 border border-gray-100 rounded">
-                            <p class="text-xs text-gray-400">지점장</p>
-                            <p id="branch-mgr" class="font-medium">-</p>
-                        </div>
-                        <div class="p-4 border border-gray-100 rounded">
-                            <p class="text-xs text-gray-400">연락처</p>
-                            <p id="branch-tel" class="font-medium text-blue-600 underline cursor-pointer">-</p>
-                        </div>
-                    </div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-3 tracking-widest">C-Level Decision Maker</label>
+                    <input type="text" id="input-exec" placeholder="대표 또는 본부장 성함/직함을 입력하세요">
                 </div>
 
-                <!-- 상담 내역 기입 -->
                 <div>
-                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-4">Consultation Intelligence Log</label>
-                    <textarea class="w-full h-40 p-4 bg-white border border-gray-200 rounded-lg focus:ring-1 focus:ring-black outline-none leading-relaxed text-gray-600" placeholder="미팅 내용, 특이 사항 등을 기입하세요..."></textarea>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-3 tracking-widest">Branch Manager</label>
+                    <input type="text" id="input-mgr" placeholder="지점장 성함을 입력하세요">
                 </div>
 
-                <button class="w-full py-4 btn-tesla rounded-md font-medium">SAVE INTELLIGENCE</button>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-3 tracking-widest">Direct Contact</label>
+                    <input type="text" id="input-tel" placeholder="연락처를 입력하세요">
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-3 tracking-widest">Intelligence Notes</label>
+                    <textarea id="input-notes" rows="6" placeholder="상담 내용 및 전략적 이슈를 기입하세요"></textarea>
+                </div>
+
+                <div class="pt-6">
+                    <button onclick="saveData()" class="w-full bg-[#171a20] text-white py-4 rounded-md font-medium hover:bg-black transition shadow-lg">정보 저장하기</button>
+                    <p class="text-center text-[10px] text-gray-400 mt-4 italic">저장 시 사장님용 실시간 리포트에 즉시 반영됩니다.</p>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        // 보강된 데이터 리스트 (국내 주요 수입차 딜러망)
-        const DATA = {
-            "Mercedes-Benz": [
-                { dealer: "한성자동차", exec: "대표 울리히 베를레", branches: ["강남전시장", "청담전시장", "삼성전시장", "서초전시장", "분당전시장"], mgrs: ["이몽룡", "성춘향", "변학도", "김철수", "박영희"] },
-                { dealer: "효성자동차", exec: "대표 조현준", branches: ["강북전시장", "안양전시장", "포항전시장", "광주전시장"], mgrs: ["정지점장", "최본부장", "이팀장", "한팀장"] },
-                { dealer: "KCC오토", exec: "대표 이상현", branches: ["금천전시장", "부천전시장", "마포전시장"], mgrs: ["김지점", "이지점", "박지점"] }
-            ],
-            "BMW": [
-                { dealer: "코오롱모터스", exec: "본부장 전철원", branches: ["강남전시장", "역삼전시장", "의정부전시장", "대구전시장"], mgrs: ["김코오롱", "이코오롱", "박대구", "최경북"] },
-                { dealer: "도이치모터스", exec: "회장 권오수", branches: ["성수전시장", "양재전시장", "미사전시장", "수원전시장"], mgrs: ["성수팀장", "양재지점", "하남본부", "수원지점"] },
-                { dealer: "한독모터스", exec: "대표 박신광", branches: ["용산전시장", "방배전시장", "수지전시장"], mgrs: ["용산장", "방배장", "수지장"] }
-            ],
-            "Tesla": [
-                { dealer: "Tesla Korea", exec: "본사 직영", branches: ["강남 스토어", "하남 스토어", "여의도 스토어", "판교 스토어", "부산 스토어"], mgrs: ["Tesla Direct", "Tesla Direct", "Tesla Direct", "Tesla Direct", "Tesla Direct"] }
-            ],
-            "Volvo": [
-                { dealer: "에이치모터스", exec: "대표 황희복", branches: ["강남전시장", "수원전시장", "대전전시장"], mgrs: ["황볼보", "박수원", "김대전"] },
-                { dealer: "아이비모터스", exec: "대표 강병철", branches: ["광주전시장", "전주전시장"], mgrs: ["강광주", "박전주"] }
-            ]
-        };
+        // 국내 수입차 전 브랜드 리스트 (테슬라 제외)
+        const brands = [
+            "Mercedes-Benz", "BMW", "Audi", "Porsche", "Volvo", "Lexus", 
+            "Volkswagen", "Land Rover", "Jeep", "Jaguar", "Maserati", 
+            "Ford", "Lincoln", "Honda", "Toyota", "Cadillac", 
+            "Bentley", "Lamborghini", "Ferrari", "Rolls-Royce"
+        ];
 
-        function filterBrand(brand) {
-            const grid = document.getElementById('dealer-grid');
-            document.getElementById('current-view').innerText = brand + " 유통망 현황";
+        // 가상 딜러 데이터 (브랜드별 대표 딜러 1~2개씩 자동 생성)
+        const dealerData = {};
+        brands.forEach(b => {
+            dealerData[b] = [
+                { dealer: b + " Dealer A", branches: ["본점", "강남 전시장", "경기 전시장"] },
+                { dealer: b + " Dealer B", branches: ["수원 전시장", "부산 전시장"] }
+            ];
+        });
+
+        // 사이드바 생성
+        const nav = document.getElementById('brand-nav');
+        brands.forEach(brand => {
+            const btn = document.createElement('button');
+            btn.className = "sidebar-item w-full text-left px-4 py-3 rounded-lg text-sm transition-all";
+            btn.innerText = brand;
+            btn.onclick = () => selectBrand(brand, btn);
+            nav.appendChild(btn);
+        });
+
+        function selectBrand(brand, el) {
+            document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('brand-title').innerText = brand + " Network";
+            
+            const grid = document.getElementById('branch-grid');
             grid.innerHTML = "";
-
-            if(!DATA[brand]) {
-                grid.innerHTML = "<p class='col-span-3 text-center text-gray-400 py-20'>해당 브랜드의 데이터는 엑셀 업로드로 준비 중입니다.</p>";
-                return;
-            }
-
-            DATA[brand].forEach(item => {
-                item.branches.forEach((bName, idx) => {
-                    const card = `
-                        <div class="tesla-card p-6 cursor-pointer" onclick="openModal('${item.dealer}', '${bName}', '${item.exec}', '${item.mgrs[idx]}')">
-                            <div class="flex justify-between items-start mb-4">
-                                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">${brand} / ${item.dealer}</span>
-                                <span class="w-2 h-2 rounded-full bg-green-500"></span>
+            
+            dealerData[brand].forEach(d => {
+                d.branches.forEach(br => {
+                    const card = document.createElement('div');
+                    card.className = "branch-card p-8 cursor-pointer bg-white";
+                    card.onclick = () => openPanel(d.dealer, br);
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">${d.dealer}</span>
+                            <div class="w-2 h-2 rounded-full bg-gray-200"></div>
+                        </div>
+                        <h4 class="text-lg font-semibold mb-4">${br}</h4>
+                        <div class="space-y-2">
+                            <div class="flex justify-between text-[11px] text-gray-400 uppercase">
+                                <span>Decision Maker</span>
+                                <span class="text-black font-medium text-right">미기입</span>
                             </div>
-                            <h3 class="text-lg font-semibold mb-2">${bName}</h3>
-                            <div class="flex items-center text-xs text-gray-500 space-x-3">
-                                <span>결정권자: <b class="text-black">${item.exec}</b></span>
-                                <span>|</span>
-                                <span>지점장: ${item.mgrs[idx]}</span>
+                            <div class="flex justify-between text-[11px] text-gray-400 uppercase">
+                                <span>Manager</span>
+                                <span class="text-black font-medium text-right">미기입</span>
                             </div>
                         </div>
                     `;
-                    grid.innerHTML += card;
+                    grid.appendChild(card);
                 });
             });
         }
 
-        function openModal(dealer, branch, exec, mgr) {
-            document.getElementById('modal-title').innerText = branch;
-            document.getElementById('modal-subtitle').innerText = dealer + " 공식 지점";
-            document.getElementById('exec-name').value = exec;
-            document.getElementById('branch-mgr').innerText = mgr + " 지점장";
-            document.getElementById('branch-tel').innerText = "02-" + Math.floor(Math.random() * 9000 + 1000) + "-7777";
+        function openPanel(dealer, branch) {
+            document.getElementById('edit-branch-name').innerText = branch;
+            document.getElementById('edit-dealer-name').innerText = dealer + " Official Network";
             
-            const modal = document.getElementById('detail-modal');
-            const panel = document.getElementById('modal-panel');
-            modal.classList.remove('hidden');
-            setTimeout(() => { panel.classList.remove('translate-x-full'); }, 10);
+            // 기존 데이터 로드 (시뮬레이션: 실제로는 DB에서 호출)
+            document.getElementById('input-exec').value = "";
+            document.getElementById('input-mgr').value = "";
+            document.getElementById('input-tel').value = "";
+            document.getElementById('input-notes').value = "";
+
+            const panel = document.getElementById('side-panel');
+            panel.classList.remove('translate-x-full');
         }
 
-        function closeModal() {
-            const panel = document.getElementById('modal-panel');
-            panel.classList.add('translate-x-full');
-            setTimeout(() => { document.getElementById('detail-modal').classList.add('hidden'); }, 300);
+        function closePanel() {
+            document.getElementById('side-panel').classList.add('translate-x-full');
         }
 
-        // 초기 로드
-        filterBrand('Mercedes-Benz');
+        function saveData() {
+            alert("입력한 데이터가 저장되었습니다.");
+            closePanel();
+        }
+
+        // 최초 로드: 벤츠 선택
+        selectBrand(brands[0], nav.firstChild);
     </script>
 </body>
 </html>
