@@ -1,154 +1,130 @@
-import 'package:flutter/material.dart';
+import React, { useState } from 'react';
 
-void main() {
-  runApp(MetisIntelligenceApp());
-}
+// --- 가상 데이터 (나중에 엑셀 업로드로 대체될 부분) ---
+const DATA = [
+  {
+    id: 'mb',
+    name: 'Mercedes-Benz',
+    dealers: [
+      {
+        name: '한성자동차',
+        executive: '홍길동 대표이사',
+        ex_info: '전략적 핵심 파트너, 마이바흐 라운지 리뉴얼 주도',
+        branches: [
+          { name: '강남 전시장', manager: '이몽룡 지점장', contact: '02-123-4567', note: '본사 직영급 관리 지점' },
+          { name: '청담 전시장', manager: '성춘향 지점장', contact: '02-555-7777', note: 'VIP 전용 상담 센터' }
+        ]
+      },
+      {
+        name: '효성자동차',
+        executive: '김철수 부사장',
+        ex_info: '실무 결정권자, 서비스 센터 확장 중심 전략',
+        branches: [
+          { name: '서초 전시장', manager: '박문수 지점장', contact: '02-999-0000', note: '재고 물량 다수 보유' }
+        ]
+      }
+    ]
+  },
+  { id: 'bmw', name: 'BMW', dealers: [] }
+];
 
-class MetisIntelligenceApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: Color(0xFF0A0A0B), // 옵시디언 블랙
-        primaryColor: Color(0xFFD4AF37), // 샴페인 골드
-        accentColor: Color(0xFFD4AF37),
-      ),
-      home: BrandListScreen(),
-    );
-  }
-}
+export default function MetisApp() {
+  const [selectedBrand, setSelectedBrand] = useState(null);
+  const [selectedDealer, setSelectedDealer] = useState(null);
 
-// --- 데이터 모델 ---
-class Dealer {
-  final String name;
-  final String ceoName; // 결정권자 성함 (예: 홍길동 대표)
-  final String decisionMakerInfo; // 결정권자 상세
-  final List<Branch> branches;
+  return (
+    <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-gold-500">
+      {/* Header */}
+      <header className="p-8 border-b border-white/10 flex justify-between items-center">
+        <h1 className="text-2xl font-extralight tracking-[0.3em] text-[#D4AF37]">METIS INTELLIGENCE</h1>
+        <div className="text-xs text-white/40 tracking-widest">EXECUTIVE NETWORK SYSTEM</div>
+      </header>
 
-  Dealer({required this.name, required this.ceoName, required this.decisionMakerInfo, required this.branches});
-}
+      <main className="p-8 max-w-7xl mx-auto">
+        {/* 1단계: 브랜드 선택 */}
+        <section className="mb-12">
+          <h2 className="text-sm uppercase tracking-tighter text-[#D4AF37] mb-6 opacity-80">Select Brand</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {DATA.map((brand) => (
+              <button
+                key={brand.id}
+                onClick={() => { setSelectedBrand(brand); setSelectedDealer(null); }}
+                className={`h-32 border transition-all duration-500 rounded-sm flex items-center justify-center text-xl font-light
+                ${selectedBrand?.id === brand.id ? 'border-[#D4AF37] bg-[#D4AF37]/5 shadow-[0_0_20px_rgba(212,175,55,0.2)]' : 'border-white/10 hover:border-white/30'}`}
+              >
+                {brand.name}
+              </button>
+            ))}
+          </div>
+        </section>
 
-class Branch {
-  final String name;
-  final String manager;
-  final String contact;
-  final String note;
+        {selectedBrand && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            {/* 2단계: 딜러사 및 결정권자 정보 */}
+            <section>
+              <h2 className="text-sm uppercase tracking-tighter text-[#D4AF37] mb-6 opacity-80">Dealer Group & C-Level</h2>
+              <div className="space-y-4">
+                {selectedBrand.dealers.map((dealer) => (
+                  <div 
+                    key={dealer.name}
+                    onClick={() => setSelectedDealer(dealer)}
+                    className={`p-6 border cursor-pointer transition-all duration-300 rounded-sm
+                    ${selectedDealer?.name === dealer.name ? 'border-[#D4AF37] bg-[#111]' : 'border-white/5 bg-[#0A0A0A] hover:border-white/20'}`}
+                  >
+                    <div className="flex justify-between items-start mb-4">
+                      <h3 className="text-xl font-light">{dealer.name}</h3>
+                      <span className="text-[10px] px-2 py-1 border border-[#D4AF37]/50 text-[#D4AF37]">OFFICIAL</span>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-[#D4AF37] font-medium">{dealer.executive}</p>
+                      <p className="text-xs text-white/50 leading-relaxed">{dealer.ex_info}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
 
-  Branch({required this.name, required this.manager, required this.contact, required this.note});
-}
-
-// --- 메인 화면: 브랜드 리스트 ---
-class BrandListScreen extends StatelessWidget {
-  final List<Map<String, String>> brands = [
-    {'name': 'Mercedes-Benz', 'logo': 'MB'},
-    {'name': 'BMW', 'logo': 'BMW'},
-    {'name': 'Audi', 'logo': 'AU'},
-    {'name': 'Porsche', 'logo': 'PO'},
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('METIS INTELLIGENCE', style: TextStyle(color: Color(0xFFD4AF37), letterSpacing: 2, fontWeight: FontWeight.w300)),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        centerTitle: true,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: GridView.builder(
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, crossAxisSpacing: 20, mainAxisSpacing: 20),
-          itemCount: brands.length,
-          itemBuilder: (context, index) {
-            return GestureDetector(
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => DealerListScreen(brandName: brands[index]['name']!))),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Color(0xFF1A1A1C),
-                  borderRadius: BorderRadius.circular(15),
-                  border: Border.all(color: Color(0xFFD4AF37).withOpacity(0.3)),
-                  boxShadow: [BoxShadow(color: Colors.black54, blurRadius: 10, offset: Offset(0, 5))],
-                ),
-                child: Center(
-                  child: Text(brands[index]['name']!, style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.w200)),
-                ),
-              ),
-            );
-          },
-        ),
-      ),
-    );
-  }
-}
-
-// --- 2단계: 딜러사 및 결정권자 리스트 ---
-class DealerListScreen extends StatelessWidget {
-  final String brandName;
-  DealerListScreen({required this.brandName});
-
-  final List<Dealer> dealers = [
-    Dealer(
-      name: '한성자동차',
-      ceoName: '홍길동 대표이사',
-      decisionMakerInfo: '전략적 우호 관계, 데이터 중심 보고 선호',
-      branches: [Branch(name: '강남 전시장', manager: '이몽룡 지점장', contact: '02-123-4567', note: '마이바흐 전용 라운지 운영 중')],
-    ),
-    Dealer(
-      name: '효성자동차',
-      ceoName: '김철수 총괄본부장',
-      decisionMakerInfo: '실무 결정권자, 하반기 네트워크 확장 계획 중',
-      branches: [Branch(name: '서초 전시장', manager: '성춘향 지점장', contact: '02-987-6543', note: '신규 입점 협의 가능')],
-    ),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(brandName, style: TextStyle(color: Color(0xFFD4AF37))),
-        backgroundColor: Colors.transparent,
-      ),
-      body: ListView.builder(
-        itemCount: dealers.length,
-        itemBuilder: (context, index) {
-          return Container(
-            margin: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            padding: EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(colors: [Color(0xFF1A1A1C), Color(0xFF0A0A0B)]),
-              borderRadius: BorderRadius.circular(12),
-              border: Border(left: BorderSide(color: Color(0xFFD4AF37), width: 3)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(dealers[index].name, style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
-                    Icon(Icons.verified_user, color: Color(0xFFD4AF37), size: 20),
-                  ],
-                ),
-                SizedBox(height: 10),
-                Text('결정권자: ${dealers[index].ceoName}', style: TextStyle(color: Color(0xFFD4AF37), fontSize: 16)),
-                Text(dealers[index].decisionMakerInfo, style: TextStyle(color: Colors.grey, fontSize: 13)),
-                Divider(color: Colors.white10, height: 30),
-                ...dealers[index].branches.map((branch) => ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(branch.name, style: TextStyle(color: Colors.white)),
-                  subtitle: Text('${branch.manager} | ${branch.contact}', style: TextStyle(color: Colors.white60)),
-                  trailing: Icon(Icons.arrow_forward_ios, color: Colors.white24, size: 14),
-                  onTap: () {
-                    // 지점 상세 및 메모 입력 페이지로 이동
-                  },
-                )).toList(),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
+            {/* 3단계: 지점 상세 및 메모 */}
+            <section>
+              <h2 className="text-sm uppercase tracking-tighter text-[#D4AF37] mb-6 opacity-80">Branch Details</h2>
+              {selectedDealer ? (
+                <div className="space-y-6">
+                  {selectedDealer.branches.map((branch) => (
+                    <div key={branch.name} className="p-6 bg-[#0A0A0A] border border-white/5 rounded-sm shadow-xl">
+                      <div className="flex justify-between items-center mb-4">
+                        <h4 className="text-lg font-light">{branch.name}</h4>
+                        <a href={`tel:${branch.contact}`} className="text-xs text-[#D4AF37] hover:underline">{branch.contact}</a>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 mb-6">
+                        <div>
+                          <p className="text-[10px] text-white/30 uppercase">Manager</p>
+                          <p className="text-sm">{branch.manager}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] text-white/30 uppercase">Status</p>
+                          <p className="text-sm text-green-500">Active</p>
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-white/30 uppercase mb-2">Intelligence Note</p>
+                        <textarea 
+                          className="w-full bg-black/50 border border-white/10 p-3 text-sm text-white/70 focus:border-[#D4AF37] outline-none h-24 resize-none"
+                          placeholder="상담 내용을 입력하세요..."
+                          defaultValue={branch.note}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="h-64 flex items-center justify-center border border-dashed border-white/10 text-white/20 text-sm">
+                  딜러사를 선택하면 지점 정보가 표시됩니다.
+                </div>
+              )}
+            </section>
+          </div>
+        )}
+      </main>
+    </div>
+  );
 }
