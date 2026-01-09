@@ -3,92 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>METIS | National Import Car Network</title>
+    <title>METIS | Persistent Network Intelligence</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Inter', -apple-system, sans-serif;
-            background-color: #ffffff;
-            color: #171a20;
-            letter-spacing: -0.01em;
-        }
+        body { font-family: 'Inter', -apple-system, sans-serif; background-color: #ffffff; color: #171a20; letter-spacing: -0.01em; }
         ::-webkit-scrollbar { width: 3px; height: 3px; }
         ::-webkit-scrollbar-thumb { background: #e2e2e2; border-radius: 10px; }
-        
-        .sidebar-brand {
-            transition: all 0.2s;
-            border-left: 3px solid transparent;
-        }
-        .sidebar-brand.active {
-            border-left-color: #171a20;
-            background-color: #f9f9f9;
-            font-weight: 600;
-        }
-        .dealer-tab {
-            transition: all 0.3s;
-            border-bottom: 2px solid transparent;
-            white-space: nowrap;
-        }
-        .dealer-tab.active {
-            border-bottom-color: #171a20;
-            color: #000;
-            font-weight: 600;
-        }
-        .branch-card {
-            border: 1px solid #f2f2f2;
-            transition: all 0.2s;
-            background: #fff;
-        }
-        .branch-card:hover {
-            border-color: #171a20;
-            box-shadow: 0 12px 24px rgba(0,0,0,0.04);
-        }
-        input, textarea {
-            border: 1px solid #eeeeee;
-            border-radius: 4px;
-            padding: 12px;
-            width: 100%;
-            background-color: #fbfbfb;
-            font-size: 14px;
-        }
-        input:focus {
-            outline: none;
-            border-color: #171a20;
-            background-color: #fff;
-        }
+        .sidebar-brand { transition: all 0.2s; border-left: 3px solid transparent; }
+        .sidebar-brand.active { border-left-color: #171a20; background-color: #f9f9f9; font-weight: 600; }
+        .dealer-tab { transition: all 0.3s; border-bottom: 2px solid transparent; white-space: nowrap; }
+        .dealer-tab.active { border-bottom-color: #171a20; color: #000; font-weight: 600; }
+        .branch-card { border: 1px solid #f2f2f2; transition: all 0.2s; background: #fff; border-radius: 4px; }
+        .branch-card:hover { border-color: #171a20; box-shadow: 0 12px 24px rgba(0,0,0,0.04); }
+        input, textarea { border: 1px solid #eeeeee; border-radius: 4px; padding: 12px; width: 100%; background-color: #fbfbfb; font-size: 14px; transition: all 0.2s; }
+        input:focus, textarea:focus { outline: none; border-color: #171a20; background-color: #fff; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden bg-white">
 
-    <!-- 1단계: 브랜드 사이드바 -->
+    <!-- Sidebar -->
     <aside class="w-64 border-r border-gray-100 flex flex-col">
-        <div class="p-8">
-            <h1 class="text-xl font-bold tracking-tighter italic">METIS</h1>
-            <p class="text-[9px] text-gray-400 tracking-widest uppercase mt-1">Strategic Network</p>
-        </div>
+        <div class="p-8"><h1 class="text-xl font-bold tracking-tighter italic">METIS</h1><p class="text-[9px] text-gray-400 tracking-widest uppercase mt-1">Strategic Network</p></div>
         <nav class="flex-1 overflow-y-auto px-4 space-y-1 no-scrollbar" id="brand-nav"></nav>
-        <div class="p-4 border-t border-gray-50 text-[10px] text-gray-300 text-center">CONFIDENTIAL ACCESS</div>
+        <div class="p-4 border-t border-gray-50 text-[10px] text-gray-300 text-center uppercase tracking-widest">Local Storage Active</div>
     </aside>
 
-    <!-- 메인 컨텐츠 영역 -->
     <main class="flex-1 flex flex-col">
-        <!-- 브랜드 헤더 -->
         <header class="pt-10 px-10 border-b border-gray-50">
             <div class="flex justify-between items-end mb-6">
-                <div>
-                    <h2 id="current-brand" class="text-3xl font-semibold tracking-tight uppercase">Mercedes-Benz</h2>
-                    <p class="text-xs text-gray-400 mt-1">실시간 유통망 담당자 및 연락처 다이렉트 뷰</p>
-                </div>
-                <button onclick="openDealerPanel()" class="flex items-center space-x-2 text-[11px] font-bold bg-[#171a20] text-white px-5 py-2.5 rounded-full hover:bg-black transition uppercase tracking-widest">
-                    <span>딜러사 본사 결정권자</span>
-                </button>
+                <div><h2 id="current-brand" class="text-3xl font-semibold tracking-tight uppercase">Mercedes-Benz</h2><p class="text-xs text-gray-400 mt-1 italic">새로고침 시에도 데이터가 안전하게 보존됩니다.</p></div>
+                <button onclick="openDealerPanel()" class="text-[11px] font-bold bg-[#171a20] text-white px-6 py-2.5 rounded-full hover:bg-black transition uppercase tracking-widest">딜러사 본사 결정권자</button>
             </div>
             <div class="flex space-x-8 overflow-x-auto no-scrollbar" id="dealer-tabs"></div>
         </header>
 
-        <!-- 지점 그리드 (카드 외부 정보 노출) -->
         <section class="flex-1 overflow-y-auto p-10 bg-[#fafafa]">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="branch-grid"></div>
         </section>
@@ -97,54 +47,49 @@
     <!-- [Panel 1] 지점 편집 패널 -->
     <div id="side-panel" class="fixed inset-y-0 right-0 w-[480px] bg-white shadow-2xl z-50 transform translate-x-full transition-transform duration-300 ease-in-out border-l border-gray-100 overflow-y-auto">
         <div class="p-12">
-            <div class="flex justify-between items-center mb-10 text-gray-400">
-                <span id="panel-dealer-tag" class="text-[10px] font-bold bg-gray-100 px-3 py-1 rounded uppercase tracking-widest font-mono">DEALER</span>
-                <button onclick="closePanel()" class="text-3xl font-light hover:text-black">&times;</button>
-            </div>
-            <h3 id="panel-branch-title" class="text-3xl font-semibold mb-10 tracking-tight italic">지점명</h3>
+            <div class="flex justify-between items-center mb-10"><span id="panel-dealer-tag" class="text-[10px] font-bold bg-gray-100 px-3 py-1 rounded uppercase tracking-widest font-mono">DEALER</span><button onclick="closePanel()" class="text-3xl font-light hover:text-black">&times;</button></div>
+            <h3 id="panel-branch-title" class="text-3xl font-semibold mb-10 tracking-tight italic text-gray-900">지점명</h3>
             <div class="space-y-8">
-                <div><label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Branch Manager</label><input type="text" id="in-mgr" placeholder="지점장 성함"></div>
-                <div><label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Direct Contact</label><input type="text" id="in-tel" placeholder="연락처 (카드 외부에 노출됨)"></div>
-                <div><label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Strategy Log</label><textarea id="in-notes" rows="10" placeholder="상세 상담 내역"></textarea></div>
-                <button onclick="saveBranchData()" class="w-full bg-[#171a20] text-white py-5 rounded-md font-semibold text-sm hover:bg-black transition">UPDATE INFO</button>
+                <div><label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Branch Manager</label><input type="text" id="in-mgr"></div>
+                <div><label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Direct Contact</label><input type="text" id="in-tel"></div>
+                <div><label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Strategy Log</label><textarea id="in-notes" rows="10"></textarea></div>
+                <button onclick="saveBranchData()" class="w-full bg-[#171a20] text-white py-5 rounded-md font-semibold text-sm hover:bg-black transition shadow-xl">정보 업데이트 및 자동 저장</button>
             </div>
         </div>
     </div>
 
-    <!-- [Panel 2] 딜러사 본사 결정권자 -->
+    <!-- [Panel 2] 딜러사 본사 정보 -->
     <div id="dealer-panel" class="fixed inset-y-0 right-0 w-[500px] bg-[#f9f9f9] shadow-2xl z-[60] transform translate-x-full transition-transform duration-300 border-l border-gray-200 overflow-y-auto">
         <div class="p-12">
-            <div class="flex justify-between items-center mb-10">
-                <span class="text-[10px] font-bold bg-black text-white px-3 py-1 rounded uppercase tracking-widest">HQ Executive</span>
-                <button onclick="closeDealerPanel()" class="text-3xl font-light">&times;</button>
-            </div>
-            <h3 id="dealer-panel-title" class="text-3xl font-semibold mb-10 tracking-tight">딜러사명</h3>
+            <div class="flex justify-between items-center mb-10"><span class="text-[10px] font-bold bg-black text-white px-3 py-1 rounded uppercase tracking-widest">HQ Executive</span><button onclick="closeDealerPanel()" class="text-3xl font-light">&times;</button></div>
+            <h3 id="dealer-panel-title" class="text-3xl font-semibold mb-10 tracking-tight italic">딜러사명</h3>
             <div class="space-y-8 bg-white p-8 rounded-xl border border-gray-100">
-                <div><label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">CEO</label><input type="text" id="dealer-ceo" placeholder="대표이사"></div>
-                <div><label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Sales Director</label><input type="text" id="dealer-vp" placeholder="영업본부장"></div>
-                <div><label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Note</label><textarea id="dealer-memo" rows="6" placeholder="딜러사 핵심 특징"></textarea></div>
-                <button onclick="saveDealerData()" class="w-full bg-[#171a20] text-white py-5 rounded-md font-semibold text-sm uppercase tracking-widest">Save HQ Info</button>
+                <div><label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">CEO / 대표이사</label><input type="text" id="dealer-ceo"></div>
+                <div><label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Sales Director / 본부장</label><input type="text" id="dealer-vp"></div>
+                <div><label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Strategy Note</label><textarea id="dealer-memo" rows="6"></textarea></div>
+                <button onclick="saveDealerData()" class="w-full bg-[#171a20] text-white py-5 rounded-md font-semibold text-sm uppercase tracking-widest shadow-xl">본사 데이터 저장</button>
             </div>
         </div>
     </div>
 
     <script>
-        // 데이터 저장소 시뮬레이션
-        let USER_STORAGE = {}; 
+        // [핵심] 로컬 스토리지에서 데이터 로드
+        let USER_STORAGE = JSON.parse(localStorage.getItem('METIS_DATA')) || {};
+        let DEALER_STORAGE = JSON.parse(localStorage.getItem('METIS_DEALER_DATA')) || {};
 
         const DATA = {
-            "Mercedes-Benz": { "한성자동차": ["강남본점", "청담", "삼성", "서초", "방배", "분당", "인천", "부산"], "효성자동차": ["강북", "서대문", "안양", "광주"], "KCC오토": ["금천", "영등포", "한남"], "모터원": ["일산", "파주"] },
-            "BMW": { "코오롱모터스": ["강남", "삼성", "분당", "광주", "대구"], "도이치모터스": ["성수", "한남", "미사", "수원"], "한독모터스": ["용산", "서초", "방배"], "바바리안모터스": ["송도", "일산"] },
-            "Audi": { "고진모터스": ["도산대로", "수원", "천안"], "태안모터스": ["도곡", "방배", "목동"], "코오롱아우토": ["대치", "송파"] },
-            "Porsche": { "SSCL": ["대치", "서초", "분당", "인천"], "아우토승": ["용산", "수원"], "세영모빌리티": ["송파", "성수"] },
-            "Volvo": { "에이치모터스": ["강남", "서초", "수원"], "아이비모터스": ["광주", "순천"], "아이언모터스": ["부산", "창원"] },
-            "Volkswagen": { "클라쎄오토": ["강남", "방배"], "아우토플라츠": ["송파", "분당"], "유카로오토": ["부산", "제주"] },
-            "Land Rover": { "KCC오토모빌": ["성남", "일산"], "아주네트웍스": ["한남", "강남"] },
-            "Lexus": { "천우모터스": ["용산", "일산"], "D&T": ["강남", "대치"] },
+            "Mercedes-Benz": { "한성자동차": ["강남본점", "청담", "삼성", "서초", "방배", "분당", "인천", "부산", "대전"], "효성자동차": ["강북", "서대문", "안양", "광주", "포항"], "KCC오토": ["금천", "영등포", "한남", "마포"], "모터원": ["일산", "파주", "의정부"], "경성모터스": ["강서", "화곡"], "스타자동차": ["해운대", "울산"] },
+            "BMW": { "코오롱모터스": ["강남", "삼성", "분당", "광주", "대구", "부산"], "도이치모터스": ["성수", "양재", "한남", "미사", "수원"], "한독모터스": ["용산", "서초", "방배", "상무"], "바바리안모터스": ["송도", "일산", "목동"], "삼천리모터스": ["천안", "청주"] },
+            "Audi": { "고진모터스": ["도산대로", "수원", "천안", "광주"], "태안모터스": ["도곡", "방배", "목동", "인천"], "코오롱아우토": ["대치", "송파", "서초"], "위본모터스": ["분당", "판교", "안양"] },
+            "Porsche": { "SSCL": ["대치", "서초", "분당", "인천", "부산"], "아우토승": ["용산", "수원"], "세영모빌리티": ["송파", "성수"], "도슨트": ["광주"] },
+            "Volvo": { "에이치모터스": ["강남", "서초", "수원", "인천", "대전"], "아이비모터스": ["광주", "순천", "전주"], "코오롱오토": ["천안", "청주"], "아이언모터스": ["부산", "창원"] },
+            "Volkswagen": { "클라쎄오토": ["강남", "방배", "수원"], "아우토플라츠": ["송파", "분당", "판교"], "유카로오토": ["부산", "창원", "제주"] },
+            "Land Rover": { "KCC오토모빌": ["성남", "일산"], "아주네트웍스": ["한남", "강남"], "효성프리미어": ["방배", "부산"] },
+            "Lexus": { "천우모터스": ["용산", "일산"], "D&T": ["강남", "대치"], "센트럴": ["서초", "광주"] },
             "Bentley": { "참존오토모티브": ["강남", "부산"] }, "Lamborghini": { "SQDA모터스": ["삼성"] }, "Ferrari": { "FMK": ["강남", "반포"] }, "Rolls-Royce": { "코오롱모터스": ["청담", "부산"] },
-            "Maserati": { "FMK": ["강남", "한남"] }, "Jeep": { "프리마모터스": ["강서", "일산"] }, "Ford": { "선인자동차": ["강남", "부산"] }, "Jaguar": { "KCC오토모빌": ["성남"] },
+            "Maserati": { "FMK": ["강남", "한남", "부산"] }, "Jeep": { "프리마모터스": ["강서", "일산"], "렉스모터스": ["청담"] }, "Ford": { "선인자동차": ["강남", "부산"], "프리미어": ["영등포"] },
             "Honda": { "안호모터스": ["강남"] }, "Toyota": { "효성토요타": ["강남"] }, "Cadillac": { "에이앤지모터스": ["논현"] }, "Polestar": { "본사직영": ["한남", "하남"] },
-            "McLaren": { "기흥인터내셔널": ["반포"] }, "Aston Martin": { "기흥인터내셔널": ["반포"] }, "Lincoln": { "선인자동차": ["강남"] }
+            "McLaren": { "기흥인터내셔널": ["반포"] }, "Aston Martin": { "기흥인터내셔널": ["반포"] }, "Lincoln": { "선인자동차": ["강남"] }, "Jaguar": { "KCC오토모빌": ["성남"] }
         };
 
         let currentBrand = "", currentDealer = "", activeBranchKey = "";
@@ -152,7 +97,7 @@
         const brandNav = document.getElementById('brand-nav');
         Object.keys(DATA).forEach((brand, idx) => {
             const btn = document.createElement('button');
-            btn.className = "sidebar-brand w-full text-left px-4 py-3 text-[13px] sidebar-item uppercase tracking-tighter";
+            btn.className = "sidebar-brand w-full text-left px-4 py-3 text-[13px] sidebar-item uppercase tracking-tighter font-medium";
             btn.innerText = brand;
             btn.onclick = () => selectBrand(brand, btn);
             brandNav.appendChild(btn);
@@ -191,25 +136,24 @@
                 const savedData = USER_STORAGE[key] || { mgr: "미기입", tel: "미기입" };
                 
                 const card = document.createElement('div');
-                card.className = "branch-card p-8 cursor-pointer rounded-sm flex flex-col justify-between h-[220px]";
+                card.className = "branch-card p-8 cursor-pointer flex flex-col justify-between h-[210px]";
                 card.onclick = () => openPanel(branch);
                 card.innerHTML = `
                     <div>
                         <div class="flex justify-between items-start mb-4">
                             <span class="text-[9px] font-bold text-gray-300 tracking-widest uppercase font-mono">${currentDealer}</span>
-                            <div class="w-1.5 h-1.5 rounded-full ${savedData.mgr !== "미기입" ? 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]' : 'bg-gray-200'}"></div>
+                            <div class="w-2 h-2 rounded-full ${savedData.mgr !== "미기입" ? 'bg-[#171a20] shadow-[0_0_10px_rgba(0,0,0,0.2)]' : 'bg-gray-100'}"></div>
                         </div>
-                        <h4 class="text-xl font-semibold italic tracking-tighter mb-2">${branch}</h4>
+                        <h4 class="text-xl font-semibold italic tracking-tighter">${branch}</h4>
                     </div>
-                    
-                    <div class="space-y-3 pt-4 border-t border-gray-50">
-                        <div class="flex justify-between items-center">
-                            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Manager</span>
-                            <span class="text-[11px] font-semibold text-gray-800">${savedData.mgr}</span>
+                    <div class="space-y-3 pt-4 border-t border-gray-50 text-[10px] uppercase font-bold tracking-widest">
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Manager</span>
+                            <span class="text-black">${savedData.mgr}</span>
                         </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Contact</span>
-                            <span class="text-[11px] font-medium text-blue-600 font-mono tracking-tighter">${savedData.tel}</span>
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Contact</span>
+                            <span class="text-blue-600 font-mono tracking-tighter">${savedData.tel}</span>
                         </div>
                     </div>
                 `;
@@ -221,12 +165,10 @@
             activeBranchKey = `${currentBrand}_${currentDealer}_${branch}`;
             document.getElementById('panel-dealer-tag').innerText = currentDealer;
             document.getElementById('panel-branch-title').innerText = branch;
-            
             const data = USER_STORAGE[activeBranchKey] || { mgr: "", tel: "", notes: "" };
             document.getElementById('in-mgr').value = data.mgr === "미기입" ? "" : data.mgr;
             document.getElementById('in-tel').value = data.tel === "미기입" ? "" : data.tel;
             document.getElementById('in-notes').value = data.notes || "";
-
             document.getElementById('side-panel').classList.remove('translate-x-full');
         }
 
@@ -234,19 +176,35 @@
             const mgr = document.getElementById('in-mgr').value || "미기입";
             const tel = document.getElementById('in-tel').value || "미기입";
             const notes = document.getElementById('in-notes').value;
-            
             USER_STORAGE[activeBranchKey] = { mgr, tel, notes };
-            renderBranches(); // 리스트 즉시 업데이트
+            localStorage.setItem('METIS_DATA', JSON.stringify(USER_STORAGE)); // 로컬 스토리지 저장
+            renderBranches();
             closePanel();
         }
 
-        function closePanel() { document.getElementById('side-panel').classList.add('translate-x-full'); }
-        function openDealerPanel() { 
+        function openDealerPanel() {
             document.getElementById('dealer-panel-title').innerText = currentDealer;
-            document.getElementById('dealer-panel').classList.remove('translate-x-full'); 
+            const data = DEALER_STORAGE[`${currentBrand}_${currentDealer}`] || { ceo: "", vp: "", memo: "" };
+            document.getElementById('dealer-ceo').value = data.ceo;
+            document.getElementById('dealer-vp').value = data.vp;
+            document.getElementById('dealer-memo').value = data.memo;
+            document.getElementById('dealer-panel').classList.remove('translate-x-full');
         }
+
+        function saveDealerData() {
+            const key = `${currentBrand}_${currentDealer}`;
+            DEALER_STORAGE[key] = {
+                ceo: document.getElementById('dealer-ceo').value,
+                vp: document.getElementById('dealer-vp').value,
+                memo: document.getElementById('dealer-memo').value
+            };
+            localStorage.setItem('METIS_DEALER_DATA', JSON.stringify(DEALER_STORAGE));
+            alert("본사 결정권자 정보가 영구 저장되었습니다.");
+            closeDealerPanel();
+        }
+
+        function closePanel() { document.getElementById('side-panel').classList.add('translate-x-full'); }
         function closeDealerPanel() { document.getElementById('dealer-panel').classList.add('translate-x-full'); }
-        function saveDealerData() { alert("딜러사 본사 정보가 저장되었습니다."); closeDealerPanel(); }
     </script>
 </body>
 </html>
