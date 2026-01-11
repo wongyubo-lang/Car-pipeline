@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Metis Process Flow - Timeline View</title>
+    <title>Metis Process Flow - Updated 2026.01.11</title>
     <style>
         * {
             margin: 0;
@@ -148,6 +148,12 @@
             padding: 15px;
             border-left: 4px solid;
             min-height: 150px;
+            transition: all 0.3s ease;
+        }
+        
+        .activity-card:hover {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
         }
         
         .activity-card.creator { border-color: #FF9800; }
@@ -158,7 +164,7 @@
         .activity-list {
             list-style: none;
             font-size: 13px;
-            line-height: 1.7;
+            line-height: 1.8;
         }
         
         .activity-item {
@@ -186,7 +192,7 @@
         
         .badge {
             display: inline-block;
-            padding: 2px 8px;
+            padding: 3px 8px;
             border-radius: 10px;
             font-size: 11px;
             font-weight: 600;
@@ -197,6 +203,7 @@
         .badge-blue { background: #d1ecf1; color: #0c5460; }
         .badge-orange { background: #fff3cd; color: #856404; }
         .badge-red { background: #f8d7da; color: #721c24; }
+        .badge-purple { background: #e7d4f5; color: #6a1b9a; }
         
         /* 키 인포메이션 */
         .key-info {
@@ -216,27 +223,28 @@
         
         .key-info-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 20px;
         }
         
         .info-box {
             background: white;
-            padding: 15px;
+            padding: 18px;
             border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
         
         .info-box-title {
-            font-size: 14px;
+            font-size: 15px;
             font-weight: 700;
             color: #333;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
         }
         
         .info-box-content {
-            font-size: 12px;
+            font-size: 13px;
             color: #666;
-            line-height: 1.6;
+            line-height: 1.7;
         }
         
         @media (max-width: 1200px) {
@@ -277,7 +285,7 @@
 <body>
     <div class="container">
         <h1>🎯 Metis Process Flow</h1>
-        <p class="subtitle">Offline Negotiation Platform - 전체 프로세스 한눈에 보기 (Update: 2026.01.10)</p>
+        <p class="subtitle">역할별 프로세스 전체 흐름 (Update: 2026.01.11)</p>
         
         <!-- 타임라인 헤더 -->
         <div class="timeline-wrapper">
@@ -306,8 +314,8 @@
                         <div>🤝</div>
                         <div class="step-number">STEP 3</div>
                     </div>
-                    <div class="step-title">딜 협상</div>
-                    <div class="step-subtitle">Deal Nego</div>
+                    <div class="step-title">딜 메이킹</div>
+                    <div class="step-subtitle">Deal Making</div>
                 </div>
                 
                 <div class="timeline-step">
@@ -331,10 +339,10 @@
                 
                 <div class="activity-card creator">
                     <ul class="activity-list">
-                        <li class="activity-item">Service Coverage 가이드 확인 (ASP 500만원↑, 오프라인 매장 보유)</li>
-                        <li class="activity-item">상세페이지 형식의 딜 신청서 작성 (모델명, 색상, 스펙 포함)</li>
-                        <li class="activity-item">Metis 내부 심사 대기 (승인/거절)</li>
-                        <li class="activity-item">팩트체킹 결과 확인 및 수정사항 반영</li>
+                        <li class="activity-item"><span class="badge badge-purple">Phase 1</span> 메티스가 발굴한 High Quality 딜 매칭받음</li>
+                        <li class="activity-item"><span class="badge badge-purple">Phase 2</span> 시장 트렌드 조기 포착, 직접 딜 발굴 및 신청서 작성</li>
+                        <li class="activity-item">Service Coverage 가이드 확인 (ASP 500만원↑)</li>
+                        <li class="activity-item">메티스 내부 심사 및 팩트체킹 (승인/거절)</li>
                     </ul>
                 </div>
                 
@@ -349,15 +357,16 @@
                 
                 <div class="activity-card creator">
                     <ul class="activity-list">
-                        <li class="activity-item">Metis 협상 진행 대기</li>
+                        <li class="activity-item">메티스 협상 진행 대기</li>
                         <li class="activity-item">커뮤니티 관리 지속</li>
+                        <li class="activity-item">협상 내용 및 결과 확인</li>
                         <li class="activity-item">최종 딜 결과 확인</li>
                     </ul>
                 </div>
                 
                 <div class="activity-card creator">
                     <ul class="activity-list">
-                        <li class="activity-item"><span class="badge badge-green">보상</span> <span class="highlight">Min(GMV × 5%, 500만원)</span> + 추가 지원금 50만원</li>
+                        <li class="activity-item"><span class="badge badge-green">보상</span> <span class="highlight">Min(GMV × 5%, 500만원)</span></li>
                         <li class="activity-item">Cash Account 정산 확인</li>
                         <li class="activity-item">다음 딜 준비</li>
                     </ul>
@@ -373,18 +382,20 @@
                 <div class="activity-card user">
                     <ul class="activity-list">
                         <li class="activity-item">초대 링크 수신 및 랜딩페이지 접속</li>
-                        <li class="activity-item">신규 가입 (필요시 회원가입 절차)</li>
+                        <li class="activity-item">신규 가입 (소셜 로그인: 카카오, 애플, 구글, 페이스북, 라인)</li>
                         <li class="activity-item">부스팅 또는 협상 중인 딜 탐색</li>
+                        <li class="activity-item">Creator 팔로우 기능</li>
                     </ul>
                 </div>
                 
                 <div class="activity-card user">
                     <ul class="activity-list">
-                        <li class="activity-item"><span class="badge badge-orange">입찰수수료</span> <span style="font-size: 11px;">100~500만원: 5만원 | 500~1,000만원: 10만원 | 1,000만원↑: 20만원</span></li>
-                        <li class="activity-item">최소 요구 할인금액 설정 (변경 가능)</li>
+                        <li class="activity-item"><span class="badge badge-orange">입찰수수료</span> <span style="font-size: 11px; font-weight: 600;">500만원 이하: 5만원 | 500~1,000만원: 10만원 | 1,000만원↑: 20만원</span></li>
+                        <li class="activity-item">최소 요구 할인금액(할인요율) 슬라이딩바로 설정</li>
                         <li class="activity-item">실시간 Bidding 현황 모니터링</li>
-                        <li class="activity-item">리더보드 랭킹 확인 (요율 > UIQ > 선착순)</li>
+                        <li class="activity-item">리더보드 랭킹 확인 (낮은 요율 > UIQ > 선착순)</li>
                         <li class="activity-item">지인 초대 링크 공유 (바이럴)</li>
+                        <li class="activity-item">Boosting 단계에서 자유롭게 취소 가능</li>
                     </ul>
                 </div>
                 
@@ -392,18 +403,19 @@
                     <ul class="activity-list">
                         <li class="activity-item">최종 딜 결과 및 할인금액 확인</li>
                         <li class="activity-item"><span class="badge badge-green">낙찰</span> 결제 정보 수령 (@토스페이)</li>
-                        <li class="activity-item"><span class="badge badge-red">미낙찰</span> 입찰수수료 Cash Account 적립</li>
+                        <li class="activity-item"><span class="badge badge-red">미낙찰</span> 입찰수수료 Cash Account 적립 (환급 가능)</li>
                         <li class="activity-item">UIQ 랭킹 확인</li>
+                        <li class="activity-item">Deal Nego까지는 패널티 없음</li>
                     </ul>
                 </div>
                 
                 <div class="activity-card user">
                     <ul class="activity-list">
                         <li class="activity-item">브랜드 오프라인 매장 방문</li>
-                        <li class="activity-item">계약금/잔금 결제 완료</li>
+                        <li class="activity-item">계약금/잔금/할부/리스 결제 완료</li>
                         <li class="activity-item">제품 수령 및 결제 증서 제출</li>
-                        <li class="activity-item"><span class="badge badge-green">리워드</span> 첫 구매: 10만원 | 매 구매: 1~3%</li>
-                        <li class="activity-item">UIQ 점수 반영</li>
+                        <li class="activity-item"><span class="badge badge-green">캐시 리워드</span> 첫 구매 + 매 구매 적립</li>
+                        <li class="activity-item"><span class="badge badge-green">포인트</span> UIQ 점수 반영</li>
                     </ul>
                 </div>
             </div>
@@ -416,7 +428,7 @@
                 
                 <div class="activity-card brand">
                     <ul class="activity-list">
-                        <li class="activity-item">Metis로부터 딜 제안 수령</li>
+                        <li class="activity-item">메티스로부터 딜 제안 수령</li>
                         <li class="activity-item">재고 현황 및 판매 가능 수량 확인</li>
                         <li class="activity-item">원가 구조 검토 (COGS, 변동비, CAC, LTV)</li>
                         <li class="activity-item">딜 가능 여부 1차 검토</li>
@@ -433,10 +445,11 @@
                 
                 <div class="activity-card brand">
                     <ul class="activity-list">
-                        <li class="activity-item">Metis 협상팀과 Single Term 협의</li>
+                        <li class="activity-item">메티스 협상팀과 Single Term 협의</li>
                         <li class="activity-item">최종 할인율, 물량, AS/환불 조건 확정</li>
-                        <li class="activity-item"><span class="highlight">마케팅 비율</span> 확정 (Metis 커미션: 30%)</li>
-                        <li class="activity-item">노쇼 시 커미션 차감율 협의</li>
+                        <li class="activity-item"><span class="highlight">Total Discount</span> 확정</li>
+                        <li class="activity-item"><span class="badge badge-blue">메티스 커미션</span> Total Discount × 30%</li>
+                        <li class="activity-item"><span class="badge badge-green">User Discount</span> Total Discount × 70%</li>
                     </ul>
                 </div>
                 
@@ -445,7 +458,7 @@
                         <li class="activity-item">최종 구매자 명단 수령</li>
                         <li class="activity-item">오프라인 매장에서 계약 진행</li>
                         <li class="activity-item">제품 배송/인도 완료</li>
-                        <li class="activity-item">정산 완료 후 Metis 커미션 지급</li>
+                        <li class="activity-item">정산 완료 후 메티스 커미션 지급</li>
                         <li class="activity-item">구매자 명단 Cross Check</li>
                     </ul>
                 </div>
@@ -461,17 +474,19 @@
                     <ul class="activity-list">
                         <li class="activity-item">Creator 신청서 내부 심사 (승인/거절)</li>
                         <li class="activity-item">팩트체킹 (모델명, 색상, 스펙 등)</li>
-                        <li class="activity-item">브랜드 영업 담당자 컨택 (딜 가능 여부)</li>
-                        <li class="activity-item"><span class="badge badge-blue">Up front 개런티딜</span> 3~10% 할인 제공 (초기 흥행 지원)</li>
+                        <li class="activity-item">브랜드 영업 담당자 컨택 (본부장급 이상)</li>
+                        <li class="activity-item"><span class="badge badge-blue">Upfront 개런티딜</span> 3~10% 할인 보장 (초기 흥행 지원)</li>
                     </ul>
                 </div>
                 
                 <div class="activity-card metis">
                     <ul class="activity-list">
-                        <li class="activity-item">실시간 리더보드 관리 (총 Bidder 수 × 50% + Tag Price × 50%)</li>
-                        <li class="activity-item">Sales Lead 집계 (DC 30%: N명, 40%: N명 등)</li>
+                        <li class="activity-item">실시간 리더보드 관리</li>
+                        <li class="activity-item"><span class="highlight">딜 노출 순위</span> [참여자 수×50% + 제품정가×50%]</li>
+                        <li class="activity-item">Sales Lead 집계 (DC 10%: N명, 20%: N명 등)</li>
                         <li class="activity-item">커뮤니티 RAG 엔진 실시간 대응</li>
                         <li class="activity-item">입찰수수료 결제 처리</li>
+                        <li class="activity-item">푸시 알림 및 실시간 카운팅</li>
                     </ul>
                 </div>
                 
@@ -480,7 +495,8 @@
                         <li class="activity-item"><span class="highlight">협상팀 투입</span> Negotiator, 숫자/관계 전문가, DP</li>
                         <li class="activity-item">GLG 인터뷰 (업황, 판매실적, 원가 구조 등)</li>
                         <li class="activity-item">브랜드와 Single Term 협상</li>
-                        <li class="activity-item">낙찰자 확정 (요율 > UIQ > FIFO)</li>
+                        <li class="activity-item">수익극대화 지점 찾기 (입찰수수료 + 메티스 수수료)</li>
+                        <li class="activity-item">낙찰자 확정 (낮은 요율 > UIQ > FIFO)</li>
                         <li class="activity-item">최종 딜 결과 참여자 공유</li>
                     </ul>
                 </div>
@@ -490,7 +506,7 @@
                         <li class="activity-item">결제 매칭 (@토스페이)</li>
                         <li class="activity-item">구매 증서 수령 및 검증</li>
                         <li class="activity-item">브랜드-유저 명단 Cross Check</li>
-                        <li class="activity-item"><span class="badge badge-green">커미션 수취</span> 마케팅 비율의 30%</li>
+                        <li class="activity-item"><span class="badge badge-green">커미션 수취</span> Total Discount × 30%</li>
                         <li class="activity-item">UIQ/CIQ 점수 업데이트</li>
                         <li class="activity-item">Cash Account 리워드 정산</li>
                     </ul>
@@ -503,61 +519,107 @@
             <div class="key-info-title">💡 핵심 정보</div>
             <div class="key-info-grid">
                 <div class="info-box">
-                    <div class="info-box-title">💰 입찰수수료</div>
+                    <div class="info-box-title">💰 입찰수수료 (제품 정가 기준)</div>
                     <div class="info-box-content">
-                        • 100~500만원: 5만원<br>
-                        • 500~1,000만원: 10만원<br>
-                        • 1,000만원 이상: 20만원<br>
-                        <strong>미낙찰 시:</strong> Cash Account 적립 (환급 가능)
+                        • <strong>500만원 이하: 5만원</strong><br>
+                        • <strong>500~1,000만원: 10만원</strong><br>
+                        • <strong>1,000만원 초과: 20만원</strong><br>
+                        <br>
+                        <strong>미낙찰 시:</strong> Cash Account 적립 (환급 또는 재사용 가능)<br>
+                        <strong>Boosting 단계:</strong> 자유롭게 취소 가능
                     </div>
                 </div>
                 
                 <div class="info-box">
                     <div class="info-box-title">📊 UIQ 등급 시스템</div>
                     <div class="info-box-content">
-                        • 다이아 A: 상위 2.5%<br>
-                        • 플래티넘 B: 2.5~13.5%<br>
-                        • 골드 C: 13.5~34%<br>
-                        • 실버 D: 34~50%<br>
-                        • 브론즈 E: 50%~
+                        집단 협상력을 통해 정보 비대칭 해소<br>
+                        <br>
+                        <strong>활동 점수 반영:</strong><br>
+                        • 구매 확정 후 UIQ 점수 업데이트<br>
+                        • 리더보드 랭킹에 영향<br>
+                        • 낙찰 우선순위에 반영
                     </div>
                 </div>
                 
                 <div class="info-box">
                     <div class="info-box-title">🎁 리워드 체계</div>
                     <div class="info-box-content">
-                        • 첫 구매: 10만원<br>
-                        • 매 구매: 1~3% (등급별)<br>
-                        • 신규 유치: 0.5~5% (최대 100만원)<br>
-                        • Creator: GMV × 5% (최대 500만원)
+                        <strong>User:</strong><br>
+                        • 캐시 리워드: 첫 구매 + 매 구매<br>
+                        • 포인트: UIQ 점수 적립<br>
+                        • Cash Account 환급 가능<br>
+                        <br>
+                        <strong>Creator:</strong><br>
+                        • <strong>Min(GMV × 5%, 500만원)</strong><br>
+                        • Cash Account 정산
                     </div>
                 </div>
                 
                 <div class="info-box">
                     <div class="info-box-title">💼 커미션 구조</div>
                     <div class="info-box-content">
-                        <strong>Metis 커미션 = 브랜드 마케팅 비율 × 30%</strong><br>
-                        예) 브랜드 30% 딜 제공 시<br>
-                        → Metis 9% | 고객 21% 할인
+                        <strong>Total Discount (브랜드 제공 총 할인율)</strong><br>
+                        <br>
+                        • <strong>메티스 Commission = Total Discount × 30%</strong><br>
+                        • <strong>User Discount = Total Discount × 70%</strong><br>
+                        <br>
+                        예시) Total Discount 30% 시<br>
+                        → 메티스: <strong>9%</strong><br>
+                        → 고객 할인: <strong>21%</strong>
                     </div>
                 </div>
                 
                 <div class="info-box">
                     <div class="info-box-title">🏆 낙찰자 선정 로직</div>
                     <div class="info-box-content">
-                        1순위: 최소 요구 할인율 (낮을수록 유리)<br>
-                        2순위: UIQ 랭킹<br>
-                        3순위: 선착순 (FIFO)
+                        <strong>1순위:</strong> 최소 요구 할인금액(할인요율) - 낮을수록 유리<br>
+                        <strong>2순위:</strong> UIQ 랭킹<br>
+                        <strong>3순위:</strong> 선착순 (FIFO)<br>
+                        <br>
+                        <em>※ 리더보드 하단에 Disclaimer 표시</em>
                     </div>
                 </div>
                 
                 <div class="info-box">
-                    <div class="info-box-title">⚠️ 노쇼 패널티</div>
+                    <div class="info-box-title">⚠️ 취소 및 패널티</div>
                     <div class="info-box-content">
-                        • UIQ 신용도 감점 (-50배)<br>
-                        • 1개월 딜 참여 제한<br>
-                        • 입찰수수료 몰취<br>
-                        <em>※ Deal Nego 단계까지는 패널티 없음</em>
+                        <strong>Boosting 단계:</strong><br>
+                        • 자유롭게 취소 가능<br>
+                        • Cash Account 적립<br>
+                        <br>
+                        <strong>Deal Nego 단계까지:</strong><br>
+                        • 패널티 없음<br>
+                        <br>
+                        <strong>노쇼 발생 시:</strong><br>
+                        • 향후 별도 규정 적용
+                    </div>
+                </div>
+                
+                <div class="info-box">
+                    <div class="info-box-title">🎯 Upfront 개런티딜</div>
+                    <div class="info-box-content">
+                        사업 초기 딜 certainty 확보 전략<br>
+                        <br>
+                        • <strong>3~10% 할인율 선제 보장</strong><br>
+                        • 딜 페이지에 "5% + 알파" 표기<br>
+                        • Spread 전략적 운용:<br>
+                        &nbsp;&nbsp;- 마케팅 비용화 (- Spread)<br>
+                        &nbsp;&nbsp;- 선급금 구조화 (+ Spread)
+                    </div>
+                </div>
+                
+                <div class="info-box">
+                    <div class="info-box-title">🎮 Gamification 요소</div>
+                    <div class="info-box-content">
+                        <strong>딜 노출 순위:</strong><br>
+                        [참여자 수 × 50% + 제품정가 × 50%]<br>
+                        <br>
+                        <strong>실시간 기능:</strong><br>
+                        • 비딩 참여자 수 실시간 카운팅<br>
+                        • Ticker로 참여 현황 노출<br>
+                        • 순위 변동 시 푸시 알림<br>
+                        • 리더보드 랭킹 실시간 확인
                     </div>
                 </div>
             </div>
